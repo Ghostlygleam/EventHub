@@ -7,6 +7,7 @@ interface OTPInputProps {
   length?: number
   error?: boolean
   disabled?: boolean
+  success?: boolean
 }
 
 export default function OTPInput({
@@ -15,6 +16,7 @@ export default function OTPInput({
   length = 6,
   error = false,
   disabled = false,
+  success = false,
 }: OTPInputProps) {
   const inputsRef = useRef<(HTMLInputElement | null)[]>([])
 
@@ -49,13 +51,18 @@ export default function OTPInput({
   }
 
   return (
-    <div className={[styles.row, error ? styles.shake : ''].filter(Boolean).join(' ')}>
+    <div
+      className={[
+        styles.row,
+        error ? styles.shake : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
       {digits.map((digit, i) => (
         <input
           key={i}
-          ref={el => {
-            inputsRef.current[i] = el
-          }}
+          ref={el => { inputsRef.current[i] = el }}
           type="text"
           inputMode="numeric"
           maxLength={1}
@@ -64,11 +71,12 @@ export default function OTPInput({
           onKeyDown={e => handleKeyDown(i, e)}
           onPaste={handlePaste}
           onFocus={e => e.target.select()}
-          disabled={disabled}
+          disabled={disabled || success}
           className={[
             styles.box,
-            error ? styles.errorBox : '',
-            digit ? styles.filled : '',
+            success && digit ? styles.successBox : '',
+            error && !success ? styles.errorBox : '',
+            digit && !success && !error ? styles.filled : '',
           ]
             .filter(Boolean)
             .join(' ')}

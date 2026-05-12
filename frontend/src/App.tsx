@@ -1,6 +1,7 @@
-import { type ReactNode } from 'react'
+import { type ReactNode, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
+import { isTokenExpired } from './lib/token'
 
 import LoginPage from './pages/LoginPage'
 import VerifyPage from './pages/VerifyPage'
@@ -11,8 +12,19 @@ import OrganiserPage from './pages/OrganiserPage'
 import AdminPage from './pages/AdminPage'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { token } = useAuth()
-  return token ? <>{children}</> : <Navigate to="/login" replace />
+  const { token, logout } = useAuth()
+
+  useEffect(() => {
+    if (token && isTokenExpired(token)) {
+      logout()
+    }
+  }, [token, logout])
+
+  if (!token || isTokenExpired(token)) {
+    return <Navigate to="/login" replace />
+  }
+
+  return <>{children}</>
 }
 
 export default function App() {

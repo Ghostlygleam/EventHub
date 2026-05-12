@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { isTokenExpired } from './token'
 
 export interface User {
   id: string
@@ -15,9 +16,25 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+function clearStorage() {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'))
+  const [token, setToken] = useState<string | null>(() => {
+    const stored = localStorage.getItem('token')
+    if (!stored) return null
+    if (isTokenExpired(stored)) {
+      clearStorage()
+      return null
+    }
+    return stored
+  })
+
   const [user, setUser] = useState<User | null>(() => {
+    const storedToken = localStorage.getItem('token')
+    if (!storedToken || isTokenExpired(storedToken)) return null
     const stored = localStorage.getItem('user')
     return stored ? (JSON.parse(stored) as User) : null
   })
@@ -30,8 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    clearStorage()
     setToken(null)
     setUser(null)
   }, [])

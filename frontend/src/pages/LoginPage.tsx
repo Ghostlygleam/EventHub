@@ -4,6 +4,9 @@ import styles from './LoginPage.module.css'
 export default function LoginPage() {
   return (
     <div className={styles.page}>
+      <div className={`${styles.blob} ${styles.blob1}`} />
+      <div className={`${styles.blob} ${styles.blob2}`} />
+
       <div className={styles.card}>
         <header className={styles.header}>
           <div className={styles.logoWrap}>
@@ -16,7 +19,9 @@ export default function LoginPage() {
         <div className={styles.divider} />
 
         <p className={styles.prompt}>Sign in with your university email</p>
-        <LoginForm />
+        <div className={styles.formWrap}>
+          <LoginForm />
+        </div>
       </div>
     </div>
   )
