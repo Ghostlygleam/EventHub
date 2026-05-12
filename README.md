@@ -40,5 +40,5 @@ eventhub/
 
 ## Team
 
-- Backend: [your name]
-- Frontend: [teammate name]
+- Backend: Viktoriya, Mikhail
+- Frontend: Vlad
