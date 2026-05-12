@@ -18,7 +18,7 @@
   font-family: inherit;
   color: var(--text-primary);
   background: var(--white);
-  border: 1.5px solid var(--border);
+  border: 1.5px solid hsl(var(--border));
   border-radius: var(--radius-md);
   outline: none;
   transition: var(--transition);

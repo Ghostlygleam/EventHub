@@ -1,46 +1,76 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Google Fonts loaded via <link> in index.html */
 
 :root {
-  /* Brand */
-  --crimson: #8B0000;
-  --crimson-light: #A01020;
-  --crimson-pale: #F5E6E8;
+  /* ── DMU brand (our design system) ── */
+  --crimson: #8b0000;
+  --crimson-light: #a01020;
+  --crimson-pale: #f5e6e8;
   --crimson-glass: rgba(139, 0, 0, 0.08);
 
-  /* Neutrals */
-  --white: #FFFFFF;
-  --surface: #FAFAFA;
-  --surface-2: #F3F3F5;
-  --border: rgba(0, 0, 0, 0.07);
+  --white: #ffffff;
+  --surface: #fafafa;
+  --surface-2: #f3f3f5;
+  --border-subtle: rgba(0, 0, 0, 0.07);
   --border-strong: rgba(139, 0, 0, 0.15);
 
-  /* Text */
   --text-primary: #111111;
   --text-secondary: #666666;
   --text-muted: #999999;
-  --text-on-crimson: #FFFFFF;
+  --text-on-crimson: #ffffff;
 
-  /* Glass */
   --glass-bg: rgba(255, 255, 255, 0.72);
   --glass-blur: blur(20px);
   --glass-border: rgba(255, 255, 255, 0.5);
 
-  /* Shadows */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.10), 0 4px 12px rgba(0, 0, 0, 0.06);
   --shadow-crimson: 0 4px 20px rgba(139, 0, 0, 0.20);
 
-  /* Radii */
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 24px;
   --radius-xl: 32px;
   --radius-pill: 999px;
 
-  /* Transitions */
   --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── shadcn/ui CSS variables (DMU Crimson theme) ── */
+  /* #8B0000 = hsl(0, 100%, 27%) */
+  --background: 0 0% 98%;
+  --foreground: 0 0% 7%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 7%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 7%;
+
+  --primary: 0 100% 27%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 0 0% 96%;
+  --secondary-foreground: 0 0% 7%;
+
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 40%;
+
+  --accent: 0 61% 94%;
+  --accent-foreground: 0 100% 27%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 0 0% 90%;
+  --input: 0 0% 90%;
+  --ring: 0 100% 27%;
+
+  --radius: 1rem;
 }
 
 *,
@@ -90,30 +120,10 @@ img {
   min-height: 100vh;
 }
 
-/* Page enter animation */
-@keyframes pageEnter {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.page-enter {
-  animation: pageEnter 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 /* Skeleton loader */
 @keyframes shimmer {
-  0% {
-    background-position: -400px 0;
-  }
-  100% {
-    background-position: 400px 0;
-  }
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
 }
 
 .skeleton {
