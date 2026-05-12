@@ -15,51 +15,60 @@
   border: 2px solid hsl(var(--border));
   border-radius: var(--radius-md);
   outline: none;
-  transition: var(--transition);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    color 0.18s ease;
   caret-color: var(--crimson);
   font-family: inherit;
 }
 
 .box:focus {
   border-color: var(--crimson);
-  box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.10);
+  box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.12);
 }
 
 .box:disabled {
-  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .filled {
-  border-color: rgba(139, 0, 0, 0.25);
+  border-color: rgba(139, 0, 0, 0.28);
   background: var(--crimson-glass);
 }
 
 .errorBox {
-  border-color: #dc2626 !important;
+  border-color: hsl(var(--destructive)) !important;
+  background: hsl(var(--destructive) / 0.06) !important;
 }
 
+/* Success state — green flash */
+.successBox {
+  border-color: hsl(var(--success)) !important;
+  background: hsl(var(--success) / 0.15) !important;
+  color: hsl(var(--success));
+  animation: successPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes successPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Shake animation for wrong code */
 .shake {
-  animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  animation: shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
 @keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  20% {
-    transform: translateX(-6px);
-  }
-  40% {
-    transform: translateX(6px);
-  }
-  60% {
-    transform: translateX(-4px);
-  }
-  80% {
-    transform: translateX(4px);
-  }
+  0%,  100% { transform: translateX(0); }
+  15%        { transform: translateX(-7px); }
+  35%        { transform: translateX(7px); }
+  55%        { transform: translateX(-5px); }
+  75%        { transform: translateX(5px); }
+  90%        { transform: translateX(-2px); }
 }
 
 @media (max-width: 390px) {
@@ -67,6 +76,7 @@
     width: 44px;
     height: 56px;
     font-size: 20px;
+    border-radius: var(--radius-sm);
   }
 
   .row {

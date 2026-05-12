@@ -13,7 +13,7 @@ const buttonVariants = cva(
         default:
           'bg-primary text-primary-foreground shadow-[0_4px_20px_rgba(139,0,0,0.20)] hover:bg-primary/90 hover:-translate-y-px',
         secondary:
-          'bg-white text-primary border border-[--border-strong] hover:bg-accent',
+          'bg-white text-primary border border-border hover:bg-accent',
         destructive:
           'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100',
         outline:

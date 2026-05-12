@@ -7,12 +7,14 @@ import styles from './LoginForm.module.css'
 
 const VALID_DOMAINS = ['ac.uk', 'edu', 'edu.kz', 'dmu.kz']
 
+const DOMAIN_HINT = `Use your university email (${VALID_DOMAINS.map(d => '@' + d).join(', ')})`
+
 function validateEmail(email: string): string {
   if (!email.trim()) return 'Email is required'
   const domain = email.split('@')[1]
   if (!domain) return 'Enter a valid email address'
   const valid = VALID_DOMAINS.some(d => domain === d || domain.endsWith('.' + d))
-  if (!valid) return 'Only university emails are allowed (e.g. name@dmu.ac.uk)'
+  if (!valid) return DOMAIN_HINT
   return ''
 }
 
