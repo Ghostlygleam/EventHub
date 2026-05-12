@@ -170,7 +170,7 @@
 
 .errorMsg {
   font-size: 13px;
-  color: #dc2626;
+  color: hsl(var(--destructive));
   text-align: center;
   margin: 0;
 }
@@ -222,7 +222,7 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: #16a34a;
+  color: hsl(var(--success));
   animation: toastIn 0.3s ease;
 }
 

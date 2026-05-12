@@ -1,7 +1,12 @@
+import { Navigate } from 'react-router-dom'
 import LoginForm from '../components/auth/LoginForm'
+import { useAuth } from '../hooks/useAuth'
 import styles from './LoginPage.module.css'
 
 export default function LoginPage() {
+  const { token } = useAuth()
+  if (token) return <Navigate to="/" replace />
+
   return (
     <div className={styles.page}>
       <div className={`${styles.blob} ${styles.blob1}`} />

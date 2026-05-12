@@ -66,11 +66,29 @@
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
+  --success: 142 71% 45%;
+  --success-foreground: 0 0% 100%;
+
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 100%;
+
   --border: 0 0% 90%;
   --input: 0 0% 90%;
   --ring: 0 100% 27%;
 
   --radius: 1rem;
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 *,

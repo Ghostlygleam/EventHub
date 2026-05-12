@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { Navigate, useNavigate, useLocation } from 'react-router-dom'
 import OTPInput from '../components/auth/OTPInput'
 import { Button } from '../components/ui'
 import { useAuth } from '../hooks/useAuth'
@@ -18,7 +18,7 @@ interface TokenResponse {
 export default function VerifyPage() {
   const navigate = useNavigate()
   const { state } = useLocation()
-  const { login } = useAuth()
+  const { token, login } = useAuth()
   const email = (state as { email?: string } | null)?.email ?? ''
 
   const [code, setCode] = useState('')
@@ -37,10 +37,6 @@ export default function VerifyPage() {
     return () => clearTimeout(timer)
   }, [secondsLeft])
 
-  useEffect(() => {
-    if (!email) navigate('/login', { replace: true })
-  }, [email, navigate])
-
   const verifyOTP = useCallback(
     async (otp: string) => {
       if (loading) return
@@ -54,7 +50,6 @@ export default function VerifyPage() {
           token: otp,
         })
         setSuccess(true)
-        // Brief success flash before navigating
         await new Promise(resolve => setTimeout(resolve, 480))
         login(data.access_token, {
           id: data.user_id,
@@ -87,9 +82,9 @@ export default function VerifyPage() {
     if (code.length === 6 && !loading) void verifyOTP(code)
   }
 
-  const handleResend = async () => {
+  const handleResend = useCallback(async () => {
     if (secondsLeft > 0) return
-    setSecondsFn(RESEND_DELAY)
+    setSecondsLeft(RESEND_DELAY)
     setCode('')
     setErrorMsg('')
     setResendMsg('')
@@ -100,12 +95,12 @@ export default function VerifyPage() {
     } catch {
       setErrorMsg('Failed to resend. Try again.')
     }
-  }
+  }, [email, secondsLeft])
 
-  // Helper to reset countdown (avoids ESLint complaint about setSecondsLeft in handleResend)
-  const setSecondsFn = (n: number) => setSecondsLeft(n)
-
-  if (!email) return null
+  // Already authenticated → bounce home
+  if (token) return <Navigate to="/" replace />
+  // No email in navigation state → back to /login
+  if (!email) return <Navigate to="/login" replace />
 
   return (
     <div className={styles.page}>
@@ -119,7 +114,6 @@ export default function VerifyPage() {
           </div>
           <h1 className={styles.title}>Check your inbox</h1>
 
-          {/* Email chip — click to go back and change */}
           <a
             href="/login"
             onClick={e => { e.preventDefault(); navigate('/login') }}
@@ -131,7 +125,7 @@ export default function VerifyPage() {
         </header>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          <p className={styles.label}>Enter the 6-digit code</p>
+          <p className={styles.label} id="otp-label">Enter the 6-digit code</p>
 
           <OTPInput
             value={code}
@@ -142,6 +136,7 @@ export default function VerifyPage() {
             error={shakeError}
             disabled={loading}
             success={success}
+            labelId="otp-label"
           />
 
           {errorMsg && <p className={styles.errorMsg}>{errorMsg}</p>}
@@ -157,7 +152,6 @@ export default function VerifyPage() {
           </Button>
         </form>
 
-        {/* Resend section */}
         <div className={styles.resend}>
           {resendMsg ? (
             <p className={styles.successToast}>✓ {resendMsg}</p>

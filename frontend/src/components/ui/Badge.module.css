@@ -17,8 +17,8 @@
 }
 
 .green {
-  background: #dcfce7;
-  color: #16a34a;
+  background: hsl(var(--success) / 0.15);
+  color: hsl(var(--success));
 }
 
 .gray {
@@ -32,6 +32,6 @@
 }
 
 .red {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: hsl(var(--destructive) / 0.12);
+  color: hsl(var(--destructive));
 }

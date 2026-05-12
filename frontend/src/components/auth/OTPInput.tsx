@@ -1,4 +1,10 @@
-import { useRef, type KeyboardEvent, type ClipboardEvent, type ChangeEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  type KeyboardEvent,
+  type ClipboardEvent,
+  type ChangeEvent,
+} from 'react'
 import styles from './OTPInput.module.css'
 
 interface OTPInputProps {
@@ -8,6 +14,10 @@ interface OTPInputProps {
   error?: boolean
   disabled?: boolean
   success?: boolean
+  /** ID of the element labelling this group (for aria-labelledby) */
+  labelId?: string
+  /** Whether to focus the first input on mount. Default true. */
+  autoFocus?: boolean
 }
 
 export default function OTPInput({
@@ -17,8 +27,14 @@ export default function OTPInput({
   error = false,
   disabled = false,
   success = false,
+  labelId,
+  autoFocus = true,
 }: OTPInputProps) {
   const inputsRef = useRef<(HTMLInputElement | null)[]>([])
+
+  useEffect(() => {
+    if (autoFocus) inputsRef.current[0]?.focus()
+  }, [autoFocus])
 
   const digits = value
     .split('')
@@ -52,6 +68,9 @@ export default function OTPInput({
 
   return (
     <div
+      role="group"
+      aria-labelledby={labelId}
+      aria-label={labelId ? undefined : `Enter ${length}-digit verification code`}
       className={[
         styles.row,
         error ? styles.shake : '',
@@ -81,7 +100,7 @@ export default function OTPInput({
             .filter(Boolean)
             .join(' ')}
           autoComplete={i === 0 ? 'one-time-code' : 'off'}
-          aria-label={`Digit ${i + 1}`}
+          aria-label={`Digit ${i + 1} of ${length}`}
         />
       ))}
     </div>

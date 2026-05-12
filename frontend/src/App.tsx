@@ -10,6 +10,7 @@ import EventDetailPage from './pages/EventDetailPage'
 import DashboardPage from './pages/DashboardPage'
 import OrganiserPage from './pages/OrganiserPage'
 import AdminPage from './pages/AdminPage'
+import NotFoundPage from './pages/NotFoundPage'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { token, logout } = useAuth()
@@ -38,6 +39,8 @@ export default function App() {
       <Route path="/me" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/organiser/*" element={<ProtectedRoute><OrganiserPage /></ProtectedRoute>} />
       <Route path="/admin/*" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }
