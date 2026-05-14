@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,7 +31,6 @@ async def get_db():
 # ── Helpers ─────────────────────────────────────────────────
 
 async def get_event_or_404(event_id: UUID, db: AsyncSession) -> Event:
-    """Fetch event by id or raise 404."""
     result = await db.execute(select(Event).where(Event.id == event_id))
     event = result.scalar_one_or_none()
     if event is None:
@@ -40,60 +39,67 @@ async def get_event_or_404(event_id: UUID, db: AsyncSession) -> Event:
 
 
 def check_ownership(event: Event, user: dict):
-    """Organisers can only edit their own events. Admins can edit any."""
     if user["role"] == "admin":
         return
     if str(event.organiser_id) != user["user_id"]:
-        raise HTTPException(
-            status_code=403,
-            detail="You can only modify your own events",
+        raise HTTPException(status_code=403, detail="You can only modify your own events")
+
+
+async def get_registered_count(event_id: UUID, db: AsyncSession) -> int:
+    result = await db.execute(
+        select(func.count()).where(Registration.event_id == event_id)
+    )
+    return result.scalar() or 0
+
+
+async def get_is_registered(event_id: UUID, user_id: str, db: AsyncSession) -> bool:
+    result = await db.execute(
+        select(Registration).where(
+            Registration.event_id == event_id,
+            Registration.student_id == user_id,
         )
+    )
+    return result.scalar_one_or_none() is not None
 
 
 # ── GET /events ──────────────────────────────────────────────
 
 @router.get("")
 async def list_events(
-    event_type: Optional[EventType] = Query(None, description="Filter by type: lecture, club, workshop, other"),
+    event_type: Optional[EventType] = Query(None),
     status: Optional[str] = Query(None, description="upcoming or past"),
     club_id: Optional[UUID] = Query(None),
-    search: Optional[str] = Query(None, description="Search in title and description"),
+    search: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Returns a paginated list of events.
-    Students only see published, non-cancelled events.
-    Organisers and admins also see their drafts.
+    Paginated event list.
+    Each card includes registered_count and is_registered so the frontend
+    can show the spots counter and the Registered badge without extra requests.
     """
     PAGE_SIZE = 20
     now = datetime.now(timezone.utc)
 
     query = select(Event).where(Event.is_cancelled == False)
 
-    # Students only see published events
     if user["role"] == "student":
         query = query.where(Event.is_published == True)
 
-    # Organisers see only their own drafts + all published
     if user["role"] == "organiser":
         query = query.where(
             or_(Event.is_published == True, Event.organiser_id == user["user_id"])
         )
 
-    # Filters
     if event_type:
         query = query.where(Event.event_type == event_type)
-
     if club_id:
         query = query.where(Event.club_id == club_id)
-
     if status == "upcoming":
         query = query.where(Event.starts_at >= now)
     elif status == "past":
         query = query.where(Event.starts_at < now)
-
     if search:
         query = query.where(
             or_(
@@ -102,17 +108,26 @@ async def list_events(
             )
         )
 
-    # Count total for pagination info
     count_result = await db.execute(select(func.count()).select_from(query.subquery()))
     total = count_result.scalar()
 
-    # Paginate
     query = query.order_by(Event.starts_at).offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE)
     result = await db.execute(query)
     events = result.scalars().all()
 
+    events_out = []
+    for e in events:
+        reg_count = await get_registered_count(e.id, db)
+        is_reg = await get_is_registered(e.id, user["user_id"], db)
+        events_out.append({
+            **EventResponse.model_validate(e).model_dump(),
+            "registered_count": reg_count,
+            "spots_left": (e.capacity - reg_count) if e.capacity else None,
+            "is_registered": is_reg,
+        })
+
     return {
-        "events": [EventResponse.model_validate(e) for e in events],
+        "events": events_out,
         "page": page,
         "total": total,
         "pages": (total + PAGE_SIZE - 1) // PAGE_SIZE,
@@ -127,25 +142,19 @@ async def get_event(
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Returns full event details including registered count.
-    Students can only see published events.
-    """
     event = await get_event_or_404(event_id, db)
 
     if user["role"] == "student" and not event.is_published:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    # Count registrations
-    count_result = await db.execute(
-        select(func.count()).where(Registration.event_id == event_id)
-    )
-    registered_count = count_result.scalar()
+    reg_count = await get_registered_count(event_id, db)
+    is_reg = await get_is_registered(event_id, user["user_id"], db)
 
     return {
         **EventResponse.model_validate(event).model_dump(),
-        "registered_count": registered_count,
-        "spots_left": (event.capacity - registered_count) if event.capacity else None,
+        "registered_count": reg_count,
+        "spots_left": (event.capacity - reg_count) if event.capacity else None,
+        "is_registered": is_reg,
     }
 
 
@@ -157,11 +166,7 @@ async def create_event(
     user: dict = Depends(require_role("organiser", "admin")),
     db: AsyncSession = Depends(get_db),
 ):
-    """Create a new event. Only organisers and admins can do this."""
-    event = Event(
-        **body.model_dump(),
-        organiser_id=user["user_id"],
-    )
+    event = Event(**body.model_dump(), organiser_id=user["user_id"])
     db.add(event)
     await db.commit()
     await db.refresh(event)
@@ -177,17 +182,12 @@ async def update_event(
     user: dict = Depends(require_role("organiser", "admin")),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Update event fields. Organisers can only edit their own events.
-    Only fields included in the request body are updated.
-    """
     event = await get_event_or_404(event_id, db)
     check_ownership(event, user)
 
     if event.is_cancelled:
         raise HTTPException(status_code=400, detail="Cannot edit a cancelled event")
 
-    # Only update fields that were actually sent in the request
     for field, value in body.model_dump(exclude_unset=True).items():
         setattr(event, field, value)
 
@@ -204,10 +204,6 @@ async def cancel_event(
     user: dict = Depends(require_role("organiser", "admin")),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Cancel an event — sets is_cancelled = True, does NOT delete from DB.
-    This preserves history and lets us notify registered students later.
-    """
     event = await get_event_or_404(event_id, db)
     check_ownership(event, user)
 
@@ -216,7 +212,6 @@ async def cancel_event(
 
     event.is_cancelled = True
     await db.commit()
-
     return {"message": "Event cancelled"}
 
 
@@ -228,10 +223,6 @@ async def get_event_registrations(
     user: dict = Depends(require_role("organiser", "admin")),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Returns a list of students registered for this event.
-    Only the event organiser or admin can access this.
-    """
     event = await get_event_or_404(event_id, db)
     check_ownership(event, user)
 
@@ -247,11 +238,7 @@ async def get_event_registrations(
         "event_id": str(event_id),
         "total": len(students),
         "students": [
-            {
-                "id": str(s.id),
-                "email": s.email,
-                "full_name": s.full_name,
-            }
+            {"id": str(s.id), "email": s.email, "full_name": s.full_name}
             for s in students
         ],
     }
