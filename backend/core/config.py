@@ -1,4 +1,7 @@
 # backend/core/config.py
+#
+# All settings come from the .env file.
+# Add DATABASE_URL there — copy it from Supabase: Settings → Database → URI.
 
 from pydantic_settings import BaseSettings
 
