@@ -11,8 +11,9 @@ class Settings(BaseSettings):
     supabase_key: str
     jwt_secret: str
     resend_api_key: str
+    database_url: str
     allowed_email_domains: str = "ac.uk,edu"
-    database_url: str  # full asyncpg URL, e.g. postgresql+asyncpg://postgres:pass@db.xxx.supabase.co:5432/postgres
+    dev_auth_bypass: bool = False  # set to true in .env for local dev only, never in prod
 
     @property
     def allowed_domains_list(self) -> list[str]:
