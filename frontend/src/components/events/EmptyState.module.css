@@ -1,0 +1,104 @@
+.wrap {
+  position: relative;
+  padding: 72px 24px 80px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px dashed hsl(var(--border));
+  border-radius: var(--radius-xl);
+  animation: fadeIn 0.45s ease both;
+  overflow: hidden;
+}
+
+.wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(139, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+
+.glyph {
+  position: relative;
+  margin: 0 auto 22px;
+  width: 84px;
+  height: 84px;
+  border-radius: 28px;
+  background: linear-gradient(145deg, white, var(--surface-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--crimson);
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 1px rgba(139, 0, 0, 0.10) inset,
+    0 1px 0 rgba(255, 255, 255, 1) inset;
+  animation: float 4s ease-in-out infinite;
+}
+
+.glyph::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 36px;
+  border: 1.5px dashed rgba(139, 0, 0, 0.18);
+  animation: rotate 18s linear infinite;
+}
+
+@keyframes rotate {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+.title {
+  position: relative;
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.message {
+  position: relative;
+  color: var(--text-secondary);
+  font-size: 14.5px;
+  line-height: 1.55;
+  max-width: 380px;
+  margin: 0 auto 22px;
+}
+
+.action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(145deg, #9a0010, var(--crimson));
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: var(--shadow-crimson);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(139, 0, 0, 0.30);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
