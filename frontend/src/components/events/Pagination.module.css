@@ -96,14 +96,34 @@
 }
 
 @media (max-width: 480px) {
+  .pagination {
+    margin-top: 32px;
+    gap: 12px;
+  }
+
+  .controls {
+    padding: 5px;
+    gap: 3px;
+  }
+
   .page {
     min-width: 34px;
     height: 34px;
+    padding: 0 9px;
     font-size: 13px;
   }
 
   .step {
     width: 34px;
     height: 34px;
+  }
+
+  .summary {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  .ellipsis {
+    width: 18px;
   }
 }

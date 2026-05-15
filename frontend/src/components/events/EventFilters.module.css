@@ -50,6 +50,13 @@
   font-weight: 400;
 }
 
+/* Hide the native browser clear button on type="search" — we render our own. */
+.searchInput::-webkit-search-cancel-button,
+.searchInput::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 .searchInput:hover {
   border-color: rgba(139, 0, 0, 0.18);
 }
@@ -237,12 +244,48 @@
 }
 
 @media (max-width: 640px) {
+  .toolbar {
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+
   .searchRow {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
+  }
+
+  .searchInput {
+    height: 48px;
+    font-size: 14.5px;
+    padding: 0 48px 0 44px;
+  }
+
+  .searchIcon {
+    left: 16px;
   }
 
   .statusGroup {
     align-self: flex-start;
+  }
+
+  /* Type pills row: anchor the FILTER label, scroll the pills horizontally. */
+  .typeRow {
+    flex-wrap: nowrap;
+    margin: 0 -16px;
+    padding: 0 16px 4px;
+  }
+
+  .typeLabel {
+    position: sticky;
+    left: 0;
+    background: var(--surface);
+    padding-right: 8px;
+    z-index: 1;
+  }
+
+  .typePill {
+    padding: 8px 14px;
+    font-size: 12.5px;
   }
 }

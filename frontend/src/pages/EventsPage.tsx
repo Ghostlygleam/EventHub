@@ -67,7 +67,7 @@ export default function EventsPage() {
             <div className={styles.headerLeft}>
               <span className={styles.overline}>DMUK · EventHub</span>
               <h1 className={styles.title}>
-                What's <em>happening</em> on&nbsp;campus
+                What's <em>happening</em> on campus
               </h1>
               <p className={styles.subtitle}>
                 Lectures, club nights, workshops — every gathering at De Montfort University Kazakhstan,

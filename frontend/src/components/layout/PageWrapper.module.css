@@ -30,3 +30,9 @@
     padding: 20px 16px 88px;
   }
 }
+
+@media (max-width: 480px) {
+  .main {
+    padding: 16px 14px 84px;
+  }
+}

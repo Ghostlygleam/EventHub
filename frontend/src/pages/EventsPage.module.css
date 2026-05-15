@@ -109,13 +109,15 @@
 
 .title {
   font-family: 'DM Serif Display', serif;
-  font-size: clamp(34px, 5.2vw, 52px);
+  font-size: clamp(30px, 5.2vw, 52px);
   font-weight: 400;
   color: var(--text-primary);
   letter-spacing: -0.025em;
-  line-height: 1.04;
+  line-height: 1.06;
   margin-bottom: 12px;
   animation: fadeUp 0.5s ease 0.12s both;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .title em {
@@ -242,10 +244,78 @@
   .header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
+    gap: 14px;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
   }
 
   .headerRight {
-    align-self: stretch;
+    align-self: flex-start;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .overline {
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    margin-bottom: 8px;
+  }
+
+  .overline::before {
+    width: 18px;
+  }
+
+  .title {
+    letter-spacing: -0.02em;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .content {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .header {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+  }
+
+  .headerLeft {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .title {
+    font-size: 26px;
+    line-height: 1.1;
+    word-break: break-word;
+  }
+
+  .subtitle {
+    font-size: 13.5px;
+    max-width: 100%;
+  }
+
+  .statChip {
+    padding: 8px 12px 8px 10px;
+  }
+
+  .statLabel {
+    font-size: 11.5px;
+  }
+}
+
+@media (max-width: 380px) {
+  .title {
+    font-size: 24px;
   }
 }
