@@ -1,0 +1,106 @@
+.wrap {
+  position: relative;
+  padding: 56px 28px 60px;
+  text-align: center;
+  background: hsl(var(--destructive) / 0.04);
+  border: 1px solid hsl(var(--destructive) / 0.20);
+  border-radius: var(--radius-xl);
+  animation: fadeIn 0.4s ease both;
+  overflow: hidden;
+}
+
+.wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 49%,
+    hsl(var(--destructive) / 0.05) 49.5%,
+    hsl(var(--destructive) / 0.05) 50.5%,
+    transparent 51%,
+    transparent 100%
+  );
+  background-size: 12px 12px;
+  pointer-events: none;
+}
+
+.glyph {
+  position: relative;
+  margin: 0 auto 18px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: hsl(var(--destructive) / 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--destructive));
+  box-shadow:
+    inset 0 0 0 1px hsl(var(--destructive) / 0.18),
+    0 4px 16px hsl(var(--destructive) / 0.18);
+}
+
+.title {
+  position: relative;
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.message {
+  position: relative;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+  max-width: 420px;
+  margin: 0 auto 18px;
+}
+
+.detail {
+  position: relative;
+  display: inline-block;
+  padding: 4px 10px;
+  margin-top: -8px;
+  margin-bottom: 18px;
+  border-radius: var(--radius-sm);
+  background: hsl(var(--destructive) / 0.10);
+  color: hsl(var(--destructive));
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.retry {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: var(--radius-pill);
+  background: white;
+  color: hsl(var(--destructive));
+  border: 1px solid hsl(var(--destructive) / 0.35);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.retry:hover {
+  background: hsl(var(--destructive));
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px hsl(var(--destructive) / 0.32);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

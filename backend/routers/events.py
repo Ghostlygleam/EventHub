@@ -1,9 +1,4 @@
 # backend/routers/events.py
-#
-# All event-related endpoints.
-# Students can only see published, non-cancelled events.
-# Organisers can create, edit and cancel their own events.
-# Admins can do everything organisers can, across all events.
 
 from datetime import datetime, timezone
 from typing import Optional
@@ -45,23 +40,16 @@ def check_ownership(event: Event, user: dict):
 
 
 
-# ── GET /events ──────────────────────────────────────────────
-
 @router.get("")
 async def list_events(
     event_type: Optional[EventType] = Query(None),
-    status: Optional[str] = Query(None, description="upcoming or past"),
+    event_status: Optional[str] = Query(None, alias="status"),
     club_id: Optional[UUID] = Query(None),
     search: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Paginated event list.
-    Each card includes registered_count and is_registered so the frontend
-    can show the spots counter and the Registered badge without extra requests.
-    """
     PAGE_SIZE = 20
     now = datetime.now(timezone.utc)
 
@@ -69,7 +57,6 @@ async def list_events(
 
     if user["role"] == "student":
         query = query.where(Event.is_published == True)
-
     if user["role"] == "organiser":
         query = query.where(
             or_(Event.is_published == True, Event.organiser_id == user["user_id"])
@@ -79,16 +66,21 @@ async def list_events(
         query = query.where(Event.event_type == event_type)
     if club_id:
         query = query.where(Event.club_id == club_id)
-    if status == "upcoming":
-        query = query.where(Event.starts_at >= now)
-    elif status == "past":
-        query = query.where(Event.starts_at < now)
+
+    if event_status == "upcoming":
+        query = query.where(Event.starts_at > now)
+    elif event_status == "happening":
+        query = query.where(
+            and_(Event.starts_at <= now, or_(Event.ends_at == None, Event.ends_at > now))
+        )
+    elif event_status == "past":
+        query = query.where(
+            or_(Event.ends_at < now, and_(Event.ends_at == None, Event.starts_at < now))
+        )
+
     if search:
         query = query.where(
-            or_(
-                Event.title.ilike(f"%{search}%"),
-                Event.description.ilike(f"%{search}%"),
-            )
+            or_(Event.title.ilike(f"%{search}%"), Event.description.ilike(f"%{search}%"))
         )
 
     count_result = await db.execute(select(func.count()).select_from(query.subquery()))
@@ -128,15 +120,8 @@ async def list_events(
             "is_registered": e.id in registered_ids,
         })
 
-    return {
-        "events": events_out,
-        "page": page,
-        "total": total,
-        "pages": (total + PAGE_SIZE - 1) // PAGE_SIZE,
-    }
+    return {"events": events_out, "page": page, "total": total, "pages": (total + PAGE_SIZE - 1) // PAGE_SIZE}
 
-
-# ── GET /events/:id ──────────────────────────────────────────
 
 @router.get("/{event_id}")
 async def get_event(
@@ -170,8 +155,6 @@ async def get_event(
     }
 
 
-# ── POST /events ─────────────────────────────────────────────
-
 @router.post("", status_code=201)
 async def create_event(
     body: EventCreate,
@@ -185,8 +168,6 @@ async def create_event(
     return EventResponse.model_validate(event)
 
 
-# ── PATCH /events/:id ────────────────────────────────────────
-
 @router.patch("/{event_id}")
 async def update_event(
     event_id: UUID,
@@ -196,19 +177,14 @@ async def update_event(
 ):
     event = await get_event_or_404(event_id, db)
     check_ownership(event, user)
-
     if event.is_cancelled:
         raise HTTPException(status_code=400, detail="Cannot edit a cancelled event")
-
     for field, value in body.model_dump(exclude_unset=True).items():
         setattr(event, field, value)
-
     await db.commit()
     await db.refresh(event)
     return EventResponse.model_validate(event)
 
-
-# ── DELETE /events/:id ───────────────────────────────────────
 
 @router.delete("/{event_id}")
 async def cancel_event(
@@ -218,7 +194,6 @@ async def cancel_event(
 ):
     event = await get_event_or_404(event_id, db)
     check_ownership(event, user)
-
     if event.is_cancelled:
         raise HTTPException(status_code=400, detail="Event is already cancelled")
 
@@ -247,8 +222,6 @@ async def cancel_event(
             pass
 
     return {"message": "Event cancelled", "notified": len(students)}
-
-# ── GET /events/:id/registrations ───────────────────────────
 
 @router.get("/{event_id}/registrations")
 async def get_event_registrations(

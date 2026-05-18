@@ -130,6 +130,21 @@
   }
 
   .inner {
-    padding: 0 16px;
+    padding: 0 14px;
+    gap: 6px;
+  }
+
+  .brand {
+    margin-right: 0;
+  }
+
+  .wordmark {
+    font-size: 16px;
+  }
+
+  .logoMark {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
   }
 }

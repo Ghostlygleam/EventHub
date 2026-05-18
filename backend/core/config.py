@@ -1,9 +1,7 @@
 # backend/core/config.py
-#
-# All settings come from the .env file.
-# Add DATABASE_URL there — copy it from Supabase: Settings → Database → URI.
 
 from pydantic_settings import BaseSettings
+from pydantic import model_validator
 
 
 class Settings(BaseSettings):
@@ -16,6 +14,9 @@ class Settings(BaseSettings):
     dev_auth_bypass: bool = False  # set to true in .env for local dev only, never in prod
     cors_origins: str = "http://localhost:3000"
     email_from: str = "EventHub <noreply@yourdomain.com>"
+    dev_auth_bypass: bool = False
+    app_env: str = "development"
+    cors_origins: str = "http://localhost:3000"
 
     @property
     def allowed_domains_list(self) -> list[str]:
@@ -24,6 +25,12 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",")]
+
+    @model_validator(mode="after")
+    def check_bypass_in_prod(self):
+        if self.app_env == "production" and self.dev_auth_bypass:
+            raise ValueError("DEV_AUTH_BYPASS must not be enabled in production")
+        return self
 
     class Config:
         env_file = ".env"
