@@ -1,0 +1,171 @@
+.wrap {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.hero,
+.line,
+.lineShort,
+.pill,
+.day,
+.titleLine,
+.titleLineShort,
+.asideBlock,
+.asideCta {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0.09) 40%,
+    rgba(0, 0, 0, 0.05) 80%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: var(--radius-md);
+}
+
+.hero {
+  position: relative;
+  height: 320px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 0, 0, 0.08) 0%,
+    rgba(139, 0, 0, 0.04) 100%
+  );
+  animation: none;
+}
+
+.pillRow {
+  display: flex;
+  gap: 10px;
+}
+
+.pill {
+  width: 110px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+}
+
+.heroBottom {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+}
+
+.day {
+  width: 78px;
+  height: 78px;
+  border-radius: 18px;
+  flex-shrink: 0;
+}
+
+.titleStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.titleLine {
+  width: 80%;
+  height: 22px;
+}
+
+.titleLineShort {
+  width: 45%;
+  height: 22px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 28px;
+  margin-top: 28px;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-lg);
+  border: 1px solid hsl(var(--border));
+}
+
+.line {
+  width: 100%;
+  height: 14px;
+  border-radius: 6px;
+}
+
+.lineShort {
+  width: 60%;
+  height: 14px;
+  border-radius: 6px;
+}
+
+.gap {
+  height: 14px;
+}
+
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-lg);
+  border: 1px solid hsl(var(--border));
+  align-self: flex-start;
+}
+
+.asideBlock {
+  height: 64px;
+  border-radius: var(--radius-md);
+}
+
+.asideCta {
+  height: 56px;
+  border-radius: var(--radius-pill);
+  margin-top: 8px;
+}
+
+@media (max-width: 980px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .hero {
+    height: 240px;
+    padding: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    height: 200px;
+    padding: 16px;
+  }
+
+  .day {
+    width: 60px;
+    height: 60px;
+  }
+
+  .main,
+  .aside {
+    padding: 20px;
+  }
+}
