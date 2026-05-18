@@ -6,14 +6,15 @@
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, desc
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
 from core.security import require_role
 from models.audit_log import AuditLog
 from models.user import User, UserRole
+from schemas.admin import RoleChangeRequest
 
 logger = logging.getLogger(__name__)
 
@@ -44,12 +45,19 @@ async def write_audit_log(
 
 @router.get("/users")
 async def list_users(
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
     user: dict = Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db),
 ):
-    """Returns all users with their role, status and registration date."""
+    """Returns paginated users with their role, status and registration date."""
+    offset = (page - 1) * limit
+
+    total_result = await db.execute(select(func.count()).select_from(User))
+    total = total_result.scalar() or 0
+
     result = await db.execute(
-        select(User).order_by(User.created_at.desc())
+        select(User).order_by(User.created_at.desc()).offset(offset).limit(limit)
     )
     users = result.scalars().all()
 
@@ -65,7 +73,9 @@ async def list_users(
             }
             for u in users
         ],
-        "total": len(users),
+        "total": total,
+        "page": page,
+        "pages": (total + limit - 1) // limit,
     }
 
 
@@ -74,7 +84,7 @@ async def list_users(
 @router.patch("/users/{user_id}/role")
 async def change_role(
     user_id: UUID,
-    body: dict,  # expects {"role": "organiser"}
+    body: RoleChangeRequest,
     actor: dict = Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -82,7 +92,7 @@ async def change_role(
     Change a user's role. Logs the old and new role to audit_logs.
     Valid roles: student, organiser, admin.
     """
-    new_role = body.get("role")
+    new_role = body.role
     if new_role not in [r.value for r in UserRole]:
         raise HTTPException(
             status_code=422,
@@ -164,8 +174,8 @@ async def deactivate_user(
 
 @router.get("/logs")
 async def get_logs(
-    page: int = 1,
-    limit: int = 50,
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
     actor: dict = Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -174,6 +184,9 @@ async def get_logs(
     Paginated — default 50 per page.
     """
     offset = (page - 1) * limit
+
+    total_result = await db.execute(select(func.count()).select_from(AuditLog))
+    total = total_result.scalar() or 0
 
     result = await db.execute(
         select(AuditLog)
@@ -196,6 +209,8 @@ async def get_logs(
             }
             for log in logs
         ],
+        "total": total,
         "page": page,
+        "pages": (total + limit - 1) // limit,
         "limit": limit,
     }
