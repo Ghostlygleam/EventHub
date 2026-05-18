@@ -20,6 +20,9 @@ from models.registration import Registration
 from models.user import User
 from schemas.event import EventCreate, EventUpdate, EventResponse
 from services.email import send_cancellation_notice
+import csv
+import io
+from fastapi.responses import Response
 
 router = APIRouter()
 
@@ -261,3 +264,35 @@ async def get_event_registrations(
             for s in students
         ],
     }
+
+# ── GET /events/:id/registrations/export ────────────────────
+
+@router.get("/{event_id}/registrations/export")
+async def export_event_registrations(
+    event_id: UUID,
+    user: dict = Depends(require_role("organiser", "admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    event = await get_event_or_404(event_id, db)
+    check_ownership(event, user)
+
+    result = await db.execute(
+        select(User.email, User.full_name, Registration.registered_at)
+        .join(Registration, Registration.student_id == User.id)
+        .where(Registration.event_id == event_id)
+        .order_by(Registration.registered_at)
+    )
+    rows = result.all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["email", "full_name", "registered_at"])
+    for email, full_name, registered_at in rows:
+        writer.writerow([email, full_name or "", registered_at.isoformat() if registered_at else ""])
+
+    filename = f"registrations_{event_id}.csv"
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
