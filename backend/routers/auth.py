@@ -1,7 +1,19 @@
+# backend/routers/auth.py
+#
+# Authentication via Supabase OTP.
+# In dev mode (DEV_AUTH_BYPASS=true in .env), use code 000000 to skip real OTP.
+# Never enable the bypass in production.
+
+import httpx
+from uuid import uuid5, NAMESPACE_DNS
 from fastapi import APIRouter, HTTPException
-from schemas.auth import SendOTPRequest, VerifyOTPRequest, TokenResponse
+from sqlalchemy import select
+
 from core.config import settings
 from core.security import create_access_token
+from core.database import AsyncSessionLocal
+from models.user import User, UserRole
+from schemas.auth import SendOTPRequest, VerifyOTPRequest, TokenResponse
 
 router = APIRouter()
 
@@ -14,36 +26,124 @@ def is_valid_domain(email: str) -> bool:
 @router.post("/send-otp")
 async def send_otp(body: SendOTPRequest):
     if not is_valid_domain(body.email):
-        raise HTTPException(
-            status_code=400,
-            detail="Only university emails are allowed",
+        raise HTTPException(status_code=400, detail="Only university emails are allowed")
+
+    # Dev bypass — skip Supabase, just tell the frontend to use 000000
+    if settings.dev_auth_bypass:
+        return {"message": "OTP sent (dev bypass — use code 000000)"}
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{settings.supabase_url}/auth/v1/otp",
+            headers={
+                "apikey": settings.supabase_key,
+                "Content-Type": "application/json",
+            },
+            json={
+                "email": body.email,
+                "options": {"should_create_user": True},
+            },
         )
-    # TODO: call Supabase Auth to send OTP
-    # import httpx
-    # async with httpx.AsyncClient() as client:
-    #     await client.post(f"{settings.supabase_url}/auth/v1/otp", ...)
-    return {"message": "OTP sent"}
+
+    if response.status_code not in (200, 204):
+        raise HTTPException(status_code=502, detail="Failed to send OTP, please try again")
+
+    return {"message": "OTP sent to your email"}
 
 
 @router.post("/verify-otp", response_model=TokenResponse)
 async def verify_otp(body: VerifyOTPRequest):
-    # TODO: verify OTP with Supabase Auth
-    # TODO: get or create user in DB
-    # TODO: return real token
-    token = create_access_token({
-        "user_id": "placeholder-uuid",
-        "email": body.email,
-        "role": "student",
-    })
-    return TokenResponse(
-        access_token=token,
-        user_id="placeholder-uuid",
-        email=body.email,
-        role="student",
-    )
+
+    # Dev bypass — code 000000 creates a real user in DB and returns a real JWT
+    if settings.dev_auth_bypass and body.token == "000000":
+        # UUID v5 is deterministic — same email always gives same user, no zombie records
+        fake_id = str(uuid5(NAMESPACE_DNS, body.email))
+
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(select(User).where(User.id == fake_id))
+            user = result.scalar_one_or_none()
+
+            if user is None:
+                user = User(
+                    id=fake_id,
+                    email=body.email,
+                    role=UserRole.student,
+                    is_active=True,
+                )
+                db.add(user)
+                await db.commit()
+                await db.refresh(user)
+
+        token = create_access_token({
+            "user_id": str(user.id),
+            "email": user.email,
+            "role": user.role.value,
+        })
+
+        return TokenResponse(
+            access_token=token,
+            user_id=str(user.id),
+            email=user.email,
+            role=user.role.value,
+        )
+
+    # Normal flow — verify with Supabase
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{settings.supabase_url}/auth/v1/token?grant_type=otp",
+            headers={
+                "apikey": settings.supabase_key,
+                "Content-Type": "application/json",
+            },
+            json={
+                "email": body.email,
+                "token": body.token,
+                "type": "email",
+            },
+        )
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=401, detail="Invalid or expired OTP code")
+
+    supabase_data = response.json()
+    supabase_user = supabase_data.get("user", {})
+    supabase_user_id = supabase_user.get("id")
+
+    if not supabase_user_id:
+        raise HTTPException(status_code=502, detail="Unexpected response from auth provider")
+
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(User).where(User.id == supabase_user_id))
+        user = result.scalar_one_or_none()
+
+        if user is None:
+            user = User(
+                id=supabase_user_id,
+                email=body.email,
+                role=UserRole.student,
+                is_active=True,
+            )
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+
+        if not user.is_active:
+            raise HTTPException(status_code=403, detail="Your account has been deactivated")
+
+        token = create_access_token({
+            "user_id": str(user.id),
+            "email": user.email,
+            "role": user.role.value,
+        })
+
+        return TokenResponse(
+            access_token=token,
+            user_id=str(user.id),
+            email=user.email,
+            role=user.role.value,
+        )
 
 
 @router.post("/logout")
 async def logout():
-    # TODO: invalidate Supabase session
     return {"message": "Logged out"}
