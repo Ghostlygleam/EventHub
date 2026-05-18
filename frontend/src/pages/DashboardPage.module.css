@@ -1,0 +1,682 @@
+/* ════════════════════════════════════════════════════════════════
+   DashboardPage — /me
+   Concept: "Campus Pass" — your tickets, your archive, in one pass.
+   ════════════════════════════════════════════════════════════════ */
+
+.page {
+  position: relative;
+  min-height: calc(100vh - 64px);
+  padding: 56px 0 96px;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* ─── Atmosphere ─── */
+.bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.blob1 {
+  top: -160px;
+  left: -120px;
+  width: 460px;
+  height: 460px;
+  background: radial-gradient(circle, rgba(139, 0, 0, 0.28), transparent 70%);
+  animation: float1 16s ease-in-out infinite;
+}
+
+.blob2 {
+  top: 30%;
+  right: -180px;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(160, 16, 32, 0.18), transparent 70%);
+  animation: float2 22s ease-in-out infinite;
+}
+
+.blob3 {
+  bottom: -180px;
+  left: 40%;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(255, 200, 200, 0.4), transparent 70%);
+  animation: float3 19s ease-in-out infinite;
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(40px, 30px) scale(1.06); }
+}
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-50px, 40px) scale(1.04); }
+}
+@keyframes float3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(30px, -40px) scale(1.08); }
+}
+
+.dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(139, 0, 0, 0.07) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+
+/* ════════════════ CONTENT ════════════════ */
+.content {
+  position: relative;
+  z-index: 1;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   THE PASS (hero)
+   ════════════════════════════════════════════════════════════════ */
+
+.pass {
+  position: relative;
+  border-radius: 32px;
+  overflow: hidden;
+  isolation: isolate;
+
+  /* Pass background: crimson gradient + subtle paper grain */
+  background:
+    radial-gradient(
+      circle at 18% 12%,
+      rgba(255, 220, 220, 0.18),
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 88% 88%,
+      rgba(160, 16, 32, 0.4),
+      transparent 60%
+    ),
+    linear-gradient(135deg, #5a0000 0%, #8b0000 50%, #6e0010 100%);
+
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.2) inset,
+    0 30px 80px rgba(60, 0, 0, 0.32),
+    0 8px 24px rgba(60, 0, 0, 0.18);
+
+  opacity: 0;
+  animation: passEnter 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.pass::before {
+  /* Paper grain texture */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 22px 22px, 13px 13px;
+  background-position: 0 0, 11px 7px;
+  opacity: 0.85;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pass::after {
+  /* Light sweep — a tiny shimmer */
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -30%;
+  width: 60%;
+  height: 200%;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 45%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0.08) 55%,
+    transparent 100%
+  );
+  transform: rotate(20deg);
+  pointer-events: none;
+  z-index: 2;
+  animation: passShine 9s ease-in-out infinite;
+}
+
+@keyframes passEnter {
+  from { opacity: 0; transform: translateY(20px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes passShine {
+  0%, 100% { transform: translateX(-30%) rotate(20deg); opacity: 0; }
+  40%      { opacity: 0.7; }
+  60%      { opacity: 0.7; }
+  100%     { transform: translateX(380%) rotate(20deg); opacity: 0; }
+}
+
+/* ─── Perforated top edge ─── */
+.passPerf {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 12px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.passPerfDot {
+  width: 6px;
+  height: 6px;
+  margin-top: 3px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05) inset;
+}
+
+/* ─── Pass inner content ─── */
+.passInner {
+  position: relative;
+  z-index: 4;
+  padding: 46px 44px 28px;
+  color: var(--text-on-crimson);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.passHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.passBrand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.passBrandMark {
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 4px;
+  letter-spacing: 0.16em;
+}
+
+.passBrandDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.passBrandWord {
+  font-style: italic;
+  letter-spacing: 0.12em;
+  text-transform: none;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.passSerial {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.passSerialLabel {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  opacity: 0.7;
+}
+
+.passSerialValue {
+  font-size: 18px;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+}
+
+/* ─── Main row: identity + stats ─── */
+.passMain {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 36px;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  min-width: 0;
+}
+
+/* ─── Avatar (embossed glyph) ─── */
+.avatar {
+  position: relative;
+  flex-shrink: 0;
+  width: 86px;
+  height: 86px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.14), transparent 60%),
+    rgba(0, 0, 0, 0.18);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.16) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.18) inset,
+    0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.avatarInitials {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: rgba(255, 255, 255, 0.96);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 1;
+}
+
+.avatarRing {
+  position: absolute;
+  inset: -5px;
+  border-radius: 26px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+}
+
+.identityText {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.heading {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 42px;
+  line-height: 1.06;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: rgba(255, 255, 255, 0.98);
+}
+
+.heading em {
+  font-style: italic;
+  color: rgba(255, 220, 220, 0.95);
+}
+
+.tagline {
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.72);
+  max-width: 42ch;
+}
+
+/* ─── Stats: "stamps" ─── */
+.stats {
+  display: flex;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.stat {
+  position: relative;
+  width: 122px;
+  padding: 16px 14px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.12) inset;
+  transition: transform 0.3s ease;
+}
+
+.stat:hover {
+  transform: translateY(-2px) rotate(-1deg);
+}
+
+.statMuted {
+  opacity: 0.78;
+}
+
+.statValue {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 44px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  color: rgba(255, 255, 255, 0.98);
+}
+
+.statLabel {
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 220, 220, 0.92);
+}
+
+.statSublabel {
+  font-size: 10px;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ─── Pass footer (decorative code line) ─── */
+.passFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 20px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.16);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.5);
+  gap: 16px;
+}
+
+.passFooterCode {
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.passFooterMeta {
+  font-style: italic;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TABS WRAP
+   ════════════════════════════════════════════════════════════════ */
+
+.tabsWrap {
+  /* DashboardTabs handles its own animation */
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LIST
+   ════════════════════════════════════════════════════════════════ */
+
+.listShell {
+  min-height: 200px;
+}
+
+.listShellFetching {
+  opacity: 0.86;
+  transition: opacity 0.2s ease;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ERROR CARD
+   ════════════════════════════════════════════════════════════════ */
+
+.errorCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 28px 44px;
+
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 28px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 14px 40px rgba(20, 6, 6, 0.08);
+}
+
+.errorGlyph {
+  width: 58px;
+  height: 58px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(var(--destructive) / 0.12);
+  border-radius: 18px;
+  color: hsl(var(--destructive));
+  margin-bottom: 18px;
+}
+
+.errorTitle {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.errorBody {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  max-width: 42ch;
+  margin-bottom: 14px;
+}
+
+.errorDetail {
+  display: inline-block;
+  margin-bottom: 18px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  color: var(--text-secondary);
+  max-width: 100%;
+  word-break: break-all;
+}
+
+.errorActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.errorBtn,
+.errorBtnSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: all 0.18s ease;
+}
+
+.errorBtn {
+  background: var(--crimson);
+  color: var(--text-on-crimson);
+  box-shadow: 0 4px 16px rgba(139, 0, 0, 0.28);
+}
+
+.errorBtn:hover {
+  background: var(--crimson-light);
+  transform: translateY(-1px);
+}
+
+.errorBtnSecondary {
+  background: transparent;
+  color: var(--text-primary);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.errorBtnSecondary:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 860px) {
+  .passInner {
+    padding: 40px 30px 24px;
+    gap: 24px;
+  }
+
+  .passMain {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .stats {
+    width: 100%;
+  }
+
+  .stat {
+    flex: 1;
+  }
+
+  .heading {
+    font-size: 34px;
+  }
+
+  .avatar {
+    width: 72px;
+    height: 72px;
+  }
+
+  .avatarInitials {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 40px 0 80px;
+  }
+
+  .content {
+    padding: 0 18px;
+    gap: 24px;
+  }
+
+  .pass {
+    border-radius: 24px;
+  }
+
+  .passInner {
+    padding: 36px 22px 22px;
+  }
+
+  .passHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .identity {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  .heading {
+    font-size: 30px;
+  }
+
+  .stats {
+    gap: 10px;
+  }
+
+  .stat {
+    width: auto;
+    padding: 14px 10px 12px;
+  }
+
+  .statValue {
+    font-size: 36px;
+  }
+
+  .passFooter {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
