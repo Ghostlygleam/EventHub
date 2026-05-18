@@ -19,6 +19,7 @@ from models.event import Event, EventType
 from models.registration import Registration
 from models.user import User
 from schemas.event import EventCreate, EventUpdate, EventResponse
+from services.email import send_cancellation_notice
 
 router = APIRouter()
 
@@ -212,8 +213,26 @@ async def cancel_event(
 
     event.is_cancelled = True
     await db.commit()
-    return {"message": "Event cancelled"}
 
+    # Fetch all registered students for this event
+    result = await db.execute(
+        select(User)
+        .join(Registration, Registration.student_id == User.id)
+        .where(Registration.event_id == event_id)
+    )
+    students = result.scalars().all()
+
+    # Send cancellation email to each student (fire-and-forget, don't block on failures)
+    for student in students:
+        try:
+            await send_cancellation_notice(
+                to_email=student.email,
+                event_title=event.title,
+            )
+        except Exception:
+            pass  # Log here if you add structured logging later
+
+    return {"message": "Event cancelled", "notified": len(students)}
 
 # ── GET /events/:id/registrations ───────────────────────────
 
