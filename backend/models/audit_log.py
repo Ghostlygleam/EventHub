@@ -16,5 +16,5 @@ class AuditLog(Base):
     action = Column(String, nullable=False)        # e.g. 'role_changed', 'user_deactivated'
     target_type = Column(String, nullable=False)   # e.g. 'user', 'event'
     target_id = Column(UUID(as_uuid=True), nullable=False)
-    metadata = Column(JSONB, nullable=True)        # extra context as JSON
+    meta = Column("metadata", JSONB, nullable=True)  # extra context as JSON
     created_at = Column(DateTime(timezone=True), server_default=func.now())
