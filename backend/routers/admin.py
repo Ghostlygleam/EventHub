@@ -27,7 +27,7 @@ async def write_audit_log(
     action: str,
     target_type: str,
     target_id: str,
-    metadata: dict = None,
+    meta: dict = None,
 ):
     """Write an entry to audit_logs. Called after every admin action."""
     log = AuditLog(
@@ -35,7 +35,7 @@ async def write_audit_log(
         action=action,
         target_type=target_type,
         target_id=target_id,
-        metadata=metadata or {},
+        meta=meta or {},
     )
     db.add(log)
     await db.commit()
@@ -115,7 +115,7 @@ async def change_role(
         action="role_changed",
         target_type="user",
         target_id=str(user_id),
-        metadata={"old_role": old_role, "new_role": new_role},
+        meta={"old_role": old_role, "new_role": new_role},
     )
 
     logger.info("Admin %s changed role of %s: %s → %s", actor["email"], target_user.email, old_role, new_role)
@@ -162,7 +162,7 @@ async def deactivate_user(
         action="user_deactivated",
         target_type="user",
         target_id=str(user_id),
-        metadata={"email": target_user.email},
+        meta={"email": target_user.email},
     )
 
     logger.info("Admin %s deactivated user %s", actor["email"], target_user.email)
@@ -204,7 +204,7 @@ async def get_logs(
                 "action": log.action,
                 "target_type": log.target_type,
                 "target_id": str(log.target_id),
-                "metadata": log.metadata,
+                "metadata": log.meta,
                 "created_at": log.created_at.isoformat() if log.created_at else None,
             }
             for log in logs
