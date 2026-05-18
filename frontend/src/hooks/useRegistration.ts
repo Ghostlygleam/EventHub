@@ -36,6 +36,7 @@ export function useRegistration(eventId: string | undefined) {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: key })
       qc.invalidateQueries({ queryKey: ['events'] })
+      qc.invalidateQueries({ queryKey: ['my-registrations'] })
     },
   })
 
@@ -57,6 +58,7 @@ export function useRegistration(eventId: string | undefined) {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: key })
       qc.invalidateQueries({ queryKey: ['events'] })
+      qc.invalidateQueries({ queryKey: ['my-registrations'] })
     },
   })
 

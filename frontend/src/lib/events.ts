@@ -35,6 +35,11 @@ export interface EventsQuery {
   page?: number
 }
 
+export interface MyRegistrationsResponse {
+  upcoming: Event[]
+  past: Event[]
+}
+
 export const PAGE_SIZE = 20
 
 export const EVENT_TYPE_LABEL: Record<EventType, string> = {
