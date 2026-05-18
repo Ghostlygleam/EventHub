@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     resend_api_key: str
     database_url: str
     allowed_email_domains: str = "ac.uk,edu"
+    dev_auth_bypass: bool = False  # set to true in .env for local dev only, never in prod
+    cors_origins: str = "http://localhost:3000"
+    email_from: str = "EventHub <noreply@yourdomain.com>"
     dev_auth_bypass: bool = False
     app_env: str = "development"
     cors_origins: str = "http://localhost:3000"

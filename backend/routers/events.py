@@ -5,7 +5,7 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, func, or_, and_
+from sqlalchemy import select, func, or_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
@@ -14,9 +14,15 @@ from models.event import Event, EventType
 from models.registration import Registration
 from models.user import User
 from schemas.event import EventCreate, EventUpdate, EventResponse
+from services.email import send_cancellation_notice
+import csv
+import io
+from fastapi.responses import Response
 
 router = APIRouter()
 
+
+# ── Helpers ─────────────────────────────────────────────────
 
 async def get_event_or_404(event_id: UUID, db: AsyncSession) -> Event:
     result = await db.execute(select(Event).where(Event.id == event_id))
@@ -32,22 +38,6 @@ def check_ownership(event: Event, user: dict):
     if str(event.organiser_id) != user["user_id"]:
         raise HTTPException(status_code=403, detail="You can only modify your own events")
 
-
-async def get_registered_count(event_id: UUID, db: AsyncSession) -> int:
-    result = await db.execute(
-        select(func.count()).where(Registration.event_id == event_id)
-    )
-    return result.scalar() or 0
-
-
-async def get_is_registered(event_id: UUID, user_id: str, db: AsyncSession) -> bool:
-    result = await db.execute(
-        select(Registration).where(
-            Registration.event_id == event_id,
-            Registration.student_id == user_id,
-        )
-    )
-    return result.scalar_one_or_none() is not None
 
 
 @router.get("")
@@ -100,15 +90,34 @@ async def list_events(
     result = await db.execute(query)
     events = result.scalars().all()
 
+    event_ids = [e.id for e in events]
+
+    # Batch query: registration counts for all events at once
+    counts_result = await db.execute(
+        select(Registration.event_id, func.count().label("cnt"))
+        .where(Registration.event_id.in_(event_ids))
+        .group_by(Registration.event_id)
+    )
+    reg_counts = {row.event_id: row.cnt for row in counts_result.all()}
+
+    # Batch query: which of these events the current user is registered for
+    user_regs_result = await db.execute(
+        select(Registration.event_id)
+        .where(
+            Registration.event_id.in_(event_ids),
+            Registration.student_id == user["user_id"],
+        )
+    )
+    registered_ids = {row.event_id for row in user_regs_result.all()}
+
     events_out = []
     for e in events:
-        reg_count = await get_registered_count(e.id, db)
-        is_reg = await get_is_registered(e.id, user["user_id"], db)
+        reg_count = reg_counts.get(e.id, 0)
         events_out.append({
             **EventResponse.model_validate(e).model_dump(),
             "registered_count": reg_count,
             "spots_left": (e.capacity - reg_count) if e.capacity else None,
-            "is_registered": is_reg,
+            "is_registered": e.id in registered_ids,
         })
 
     return {"events": events_out, "page": page, "total": total, "pages": (total + PAGE_SIZE - 1) // PAGE_SIZE}
@@ -121,11 +130,22 @@ async def get_event(
     db: AsyncSession = Depends(get_db),
 ):
     event = await get_event_or_404(event_id, db)
-    if user["role"] == "student" and not event.is_published:
+
+    if user["role"] == "student" and (not event.is_published or event.is_cancelled):
         raise HTTPException(status_code=404, detail="Event not found")
 
-    reg_count = await get_registered_count(event_id, db)
-    is_reg = await get_is_registered(event_id, user["user_id"], db)
+    count_result = await db.execute(
+        select(func.count()).where(Registration.event_id == event_id)
+    )
+    reg_count = count_result.scalar() or 0
+
+    reg_result = await db.execute(
+        select(Registration).where(
+            Registration.event_id == event_id,
+            Registration.student_id == user["user_id"],
+        )
+    )
+    is_reg = reg_result.scalar_one_or_none() is not None
 
     return {
         **EventResponse.model_validate(event).model_dump(),
@@ -176,10 +196,32 @@ async def cancel_event(
     check_ownership(event, user)
     if event.is_cancelled:
         raise HTTPException(status_code=400, detail="Event is already cancelled")
-    event.is_cancelled = True
-    await db.commit()
-    return {"message": "Event cancelled"}
 
+    # Fetch registered students before deleting registrations
+    students_result = await db.execute(
+        select(User)
+        .join(Registration, Registration.student_id == User.id)
+        .where(Registration.event_id == event_id)
+    )
+    students = students_result.scalars().all()
+
+    event.is_cancelled = True
+
+    # Remove all registrations for this event
+    await db.execute(delete(Registration).where(Registration.event_id == event_id))
+    await db.commit()
+
+    # Send cancellation email to each student (fire-and-forget, don't block on failures)
+    for student in students:
+        try:
+            await send_cancellation_notice(
+                to_email=student.email,
+                event_title=event.title,
+            )
+        except Exception:
+            pass
+
+    return {"message": "Event cancelled", "notified": len(students)}
 
 @router.get("/{event_id}/registrations")
 async def get_event_registrations(
@@ -201,5 +243,40 @@ async def get_event_registrations(
     return {
         "event_id": str(event_id),
         "total": len(students),
-        "students": [{"id": str(s.id), "email": s.email, "full_name": s.full_name} for s in students],
+        "students": [
+            {"id": str(s.id), "email": s.email, "full_name": s.full_name}
+            for s in students
+        ],
     }
+
+# ── GET /events/:id/registrations/export ────────────────────
+
+@router.get("/{event_id}/registrations/export")
+async def export_event_registrations(
+    event_id: UUID,
+    user: dict = Depends(require_role("organiser", "admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    event = await get_event_or_404(event_id, db)
+    check_ownership(event, user)
+
+    result = await db.execute(
+        select(User.email, User.full_name, Registration.registered_at)
+        .join(Registration, Registration.student_id == User.id)
+        .where(Registration.event_id == event_id)
+        .order_by(Registration.registered_at)
+    )
+    rows = result.all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["email", "full_name", "registered_at"])
+    for email, full_name, registered_at in rows:
+        writer.writerow([email, full_name or "", registered_at.isoformat() if registered_at else ""])
+
+    filename = f"registrations_{event_id}.csv"
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
