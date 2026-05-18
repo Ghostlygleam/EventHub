@@ -4,7 +4,7 @@
 # get_current_user and require_role are used as FastAPI dependencies
 # on any endpoint that requires authentication or a specific role.
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -22,7 +22,7 @@ security = HTTPBearer()
 def create_access_token(data: dict) -> str:
     """Create a signed JWT token with an expiry date."""
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.jwt_secret, algorithm=ALGORITHM)
 

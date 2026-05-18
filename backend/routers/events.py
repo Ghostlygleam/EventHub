@@ -10,10 +10,10 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func, or_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database import AsyncSessionLocal
+from core.database import get_db
 from core.security import get_current_user, require_role
 from models.event import Event, EventType
 from models.registration import Registration
@@ -25,11 +25,6 @@ import io
 from fastapi.responses import Response
 
 router = APIRouter()
-
-
-async def get_db():
-    async with AsyncSessionLocal() as session:
-        yield session
 
 
 # ── Helpers ─────────────────────────────────────────────────
@@ -48,22 +43,6 @@ def check_ownership(event: Event, user: dict):
     if str(event.organiser_id) != user["user_id"]:
         raise HTTPException(status_code=403, detail="You can only modify your own events")
 
-
-async def get_registered_count(event_id: UUID, db: AsyncSession) -> int:
-    result = await db.execute(
-        select(func.count()).where(Registration.event_id == event_id)
-    )
-    return result.scalar() or 0
-
-
-async def get_is_registered(event_id: UUID, user_id: str, db: AsyncSession) -> bool:
-    result = await db.execute(
-        select(Registration).where(
-            Registration.event_id == event_id,
-            Registration.student_id == user_id,
-        )
-    )
-    return result.scalar_one_or_none() is not None
 
 
 # ── GET /events ──────────────────────────────────────────────
@@ -119,15 +98,34 @@ async def list_events(
     result = await db.execute(query)
     events = result.scalars().all()
 
+    event_ids = [e.id for e in events]
+
+    # Batch query: registration counts for all events at once
+    counts_result = await db.execute(
+        select(Registration.event_id, func.count().label("cnt"))
+        .where(Registration.event_id.in_(event_ids))
+        .group_by(Registration.event_id)
+    )
+    reg_counts = {row.event_id: row.cnt for row in counts_result.all()}
+
+    # Batch query: which of these events the current user is registered for
+    user_regs_result = await db.execute(
+        select(Registration.event_id)
+        .where(
+            Registration.event_id.in_(event_ids),
+            Registration.student_id == user["user_id"],
+        )
+    )
+    registered_ids = {row.event_id for row in user_regs_result.all()}
+
     events_out = []
     for e in events:
-        reg_count = await get_registered_count(e.id, db)
-        is_reg = await get_is_registered(e.id, user["user_id"], db)
+        reg_count = reg_counts.get(e.id, 0)
         events_out.append({
             **EventResponse.model_validate(e).model_dump(),
             "registered_count": reg_count,
             "spots_left": (e.capacity - reg_count) if e.capacity else None,
-            "is_registered": is_reg,
+            "is_registered": e.id in registered_ids,
         })
 
     return {
@@ -148,11 +146,21 @@ async def get_event(
 ):
     event = await get_event_or_404(event_id, db)
 
-    if user["role"] == "student" and not event.is_published:
+    if user["role"] == "student" and (not event.is_published or event.is_cancelled):
         raise HTTPException(status_code=404, detail="Event not found")
 
-    reg_count = await get_registered_count(event_id, db)
-    is_reg = await get_is_registered(event_id, user["user_id"], db)
+    count_result = await db.execute(
+        select(func.count()).where(Registration.event_id == event_id)
+    )
+    reg_count = count_result.scalar() or 0
+
+    reg_result = await db.execute(
+        select(Registration).where(
+            Registration.event_id == event_id,
+            Registration.student_id == user["user_id"],
+        )
+    )
+    is_reg = reg_result.scalar_one_or_none() is not None
 
     return {
         **EventResponse.model_validate(event).model_dump(),
@@ -214,16 +222,19 @@ async def cancel_event(
     if event.is_cancelled:
         raise HTTPException(status_code=400, detail="Event is already cancelled")
 
-    event.is_cancelled = True
-    await db.commit()
-
-    # Fetch all registered students for this event
-    result = await db.execute(
+    # Fetch registered students before deleting registrations
+    students_result = await db.execute(
         select(User)
         .join(Registration, Registration.student_id == User.id)
         .where(Registration.event_id == event_id)
     )
-    students = result.scalars().all()
+    students = students_result.scalars().all()
+
+    event.is_cancelled = True
+
+    # Remove all registrations for this event
+    await db.execute(delete(Registration).where(Registration.event_id == event_id))
+    await db.commit()
 
     # Send cancellation email to each student (fire-and-forget, don't block on failures)
     for student in students:
@@ -233,7 +244,7 @@ async def cancel_event(
                 event_title=event.title,
             )
         except Exception:
-            pass  # Log here if you add structured logging later
+            pass
 
     return {"message": "Event cancelled", "notified": len(students)}
 

@@ -20,6 +20,7 @@ from models.event import Event
 from models.registration import Registration
 from models.user import User
 from schemas.event import EventResponse
+from schemas.registration import RegistrationCreate
 from services.email import send_registration_confirmation
 
 router = APIRouter()
@@ -49,15 +50,20 @@ async def my_registrations(
     upcoming = []
     past = []
 
+    event_ids = [e.id for e in events]
+
+    # Single query for all registration counts — avoids N+1
+    counts_result = await db.execute(
+        select(Registration.event_id, func.count().label("cnt"))
+        .where(Registration.event_id.in_(event_ids))
+        .group_by(Registration.event_id)
+    )
+    reg_counts = {row.event_id: row.cnt for row in counts_result.all()}
+
     for e in events:
         event_data = EventResponse.model_validate(e).model_dump()
         event_data["is_registered"] = True
-
-        # Count registrations for this event
-        count_result = await db.execute(
-            select(func.count()).where(Registration.event_id == e.id)
-        )
-        reg_count = count_result.scalar() or 0
+        reg_count = reg_counts.get(e.id, 0)
         event_data["registered_count"] = reg_count
         event_data["spots_left"] = (e.capacity - reg_count) if e.capacity else None
 
@@ -73,7 +79,7 @@ async def my_registrations(
 
 @router.post("", status_code=201)
 async def register(
-    body: dict,  # expects {"event_id": "uuid"}
+    body: RegistrationCreate,
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -92,9 +98,7 @@ async def register(
     """
     now = datetime.now(timezone.utc)
 
-    event_id = body.get("event_id")
-    if not event_id:
-        raise HTTPException(status_code=422, detail="event_id is required")
+    event_id = body.event_id
 
     async with db.begin():
         # Lock the event row to prevent race conditions on capacity
