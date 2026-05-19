@@ -338,31 +338,58 @@ export default function EventForm({
           </button>
 
           <div className={styles.primaryActions}>
-            <button
-              type="button"
-              className={styles.draftBtn}
-              onClick={() => publishAction(false)}
-              disabled={isSubmitting}
-            >
-              <Save size={14} strokeWidth={2.3} />
-              {mode === 'new' ? 'Save draft' : 'Save changes'}
-            </button>
+            {mode === 'new' ? (
+              <>
+                <button
+                  type="button"
+                  className={styles.draftBtn}
+                  onClick={() => publishAction(false)}
+                  disabled={isSubmitting}
+                >
+                  <Save size={14} strokeWidth={2.3} />
+                  Save draft
+                </button>
 
-            <button
-              type="button"
-              className={styles.publishBtn}
-              onClick={() => publishAction(true)}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <span className={styles.spinner} aria-hidden="true" />
-              ) : (
-                <>
-                  <Send size={14} strokeWidth={2.3} />
-                  {values.is_published ? 'Save & republish' : 'Publish to readers'}
-                </>
-              )}
-            </button>
+                <button
+                  type="button"
+                  className={styles.publishBtn}
+                  onClick={() => publishAction(true)}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <span className={styles.spinner} aria-hidden="true" />
+                  ) : (
+                    <>
+                      <Send size={14} strokeWidth={2.3} />
+                      Publish to readers
+                    </>
+                  )}
+                </button>
+              </>
+            ) : (
+              /* Edit mode: one Save that honours the toggle.
+                 Flip Publish off → "Save to galley" sends it back to drafts. */
+              <button
+                type="button"
+                className={styles.publishBtn}
+                onClick={() => publishAction(values.is_published)}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <span className={styles.spinner} aria-hidden="true" />
+                ) : values.is_published ? (
+                  <>
+                    <Send size={14} strokeWidth={2.3} />
+                    Save &amp; keep live
+                  </>
+                ) : (
+                  <>
+                    <Save size={14} strokeWidth={2.3} />
+                    Save to galley
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </footer>
