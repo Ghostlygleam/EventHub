@@ -204,6 +204,13 @@ export default function OrganiserEventFormPage() {
                   <EventCard event={previewEvent} index={0} />
                 </div>
 
+                <div className={styles.standfirstPreview}>
+                  <span className={styles.standfirstLabel}>STANDFIRST · on the detail page</span>
+                  <p className={cn(styles.standfirstBody, !values.description && styles.standfirstEmpty)}>
+                    {values.description || 'Your standfirst will appear on the event detail page, beneath the headline.'}
+                  </p>
+                </div>
+
                 <div className={styles.previewMeta}>
                   <span>
                     <strong>{values.title.length || 0}</strong> chars in headline

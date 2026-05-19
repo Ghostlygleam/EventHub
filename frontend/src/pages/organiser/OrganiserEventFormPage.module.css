@@ -252,6 +252,40 @@
   display: block;
 }
 
+.standfirstPreview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.02);
+  border-left: 2px solid var(--crimson);
+  border-radius: 0 10px 10px 0;
+}
+
+.standfirstLabel {
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--crimson);
+  text-transform: uppercase;
+}
+
+.standfirstBody {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-primary);
+  font-style: italic;
+  letter-spacing: -0.005em;
+}
+
+.standfirstEmpty {
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.7;
+}
+
 .previewMeta {
   display: flex;
   align-items: center;

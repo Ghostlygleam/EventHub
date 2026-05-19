@@ -100,7 +100,20 @@ export default function EventForm({
   const showErrors = submitted
 
   const update = <K extends keyof EventFormValues>(key: K, value: EventFormValues[K]) => {
-    onChange({ ...values, [key]: value })
+    const next = { ...values, [key]: value }
+    /* If start moves to or past the current end, wipe ends_at so it doesn't stay invalid. */
+    if (key === 'starts_at' && next.ends_at && next.starts_at) {
+      if (new Date(next.ends_at) <= new Date(next.starts_at)) {
+        next.ends_at = ''
+      }
+    }
+    onChange(next)
+  }
+
+  /* Capacity: digits only — strip anything else on paste / IME. */
+  const updateCapacity = (raw: string) => {
+    const digitsOnly = raw.replace(/\D+/g, '')
+    update('capacity', digitsOnly)
   }
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -209,21 +222,31 @@ export default function EventForm({
             <TextField
               label="Wraps up"
               type="datetime-local"
-              hint="optional"
+              hint="optional · must be after start"
               value={values.ends_at}
+              min={values.starts_at || undefined}
               onChange={(e) => update('ends_at', e.target.value)}
               error={showErrors ? errors.ends_at : undefined}
+              disabled={!values.starts_at}
             />
           </div>
 
           <TextField
             label="Print run"
             hint="seats — leave blank for open seating"
-            type="number"
-            min={1}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             placeholder="e.g. 120"
             value={values.capacity}
-            onChange={(e) => update('capacity', e.target.value)}
+            onChange={(e) => updateCapacity(e.target.value)}
+            onKeyDown={(e) => {
+              if (
+                ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'].includes(e.key) ||
+                e.metaKey || e.ctrlKey
+              ) return
+              if (!/^\d$/.test(e.key)) e.preventDefault()
+            }}
             error={showErrors ? errors.capacity : undefined}
           />
         </div>
@@ -264,11 +287,12 @@ export default function EventForm({
 
               <TextField
                 label="Club ID"
-                hint="UUID — leave blank if no club"
-                placeholder="00000000-0000-0000-0000-000000000000"
+                hint="UUID — not wired to a clubs index yet"
+                placeholder="00000000-0000-…"
                 value={values.club_id}
                 onChange={(e) => update('club_id', e.target.value)}
                 error={showErrors ? errors.club_id : undefined}
+                className={styles.monoCompactInput}
               />
             </div>
           )}

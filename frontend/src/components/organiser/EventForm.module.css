@@ -131,6 +131,14 @@
   animation: advancedReveal 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.monoCompactInput {
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace !important;
+  font-size: 12px !important;
+  letter-spacing: 0.04em;
+  padding: 9px 12px !important;
+  max-width: 340px;
+}
+
 @keyframes advancedReveal {
   from {
     opacity: 0;
