@@ -11,6 +11,13 @@ from core.config import settings
 engine = create_async_engine(
     settings.database_url,
     echo=False,  # set to True temporarily if you want to see SQL queries in logs
+    # Supabase / pgbouncer in transaction-mode does not survive asyncpg's
+    # prepared-statement cache: it raises DuplicatePreparedStatementError on
+    # connection reuse. Disabling both caches keeps every query unprepared.
+    connect_args={
+        "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0,
+    },
 )
  
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
