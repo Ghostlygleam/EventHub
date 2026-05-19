@@ -39,8 +39,10 @@ export default function EventsPage() {
 
   const { data, isLoading, isError, error, refetch, isFetching } = useEvents(query)
 
-  const events = data?.events ?? []
-  const total = data?.total ?? 0
+  /* Public catalogue: hide unpublished events (the backend includes the caller's
+     own drafts for organisers, which is useful on the desk but noise here). */
+  const events = (data?.events ?? []).filter((e) => e.is_published)
+  const total = events.length
   const hasActiveFilters = type !== null || debouncedSearch.trim().length > 0 || status !== 'upcoming'
 
   const resetFilters = () => {

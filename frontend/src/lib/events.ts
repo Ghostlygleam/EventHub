@@ -40,6 +40,69 @@ export interface MyRegistrationsResponse {
   past: Event[]
 }
 
+/* ── Organiser dashboard types ───────────────────────────── */
+
+export interface EventFormValues {
+  title: string
+  description: string
+  event_type: EventType
+  location: string
+  starts_at: string
+  ends_at: string
+  capacity: string
+  speaker_name: string
+  cover_image_url: string
+  club_id: string
+  is_published: boolean
+}
+
+export const EMPTY_FORM_VALUES: EventFormValues = {
+  title: '',
+  description: '',
+  event_type: 'lecture',
+  location: '',
+  starts_at: '',
+  ends_at: '',
+  capacity: '',
+  speaker_name: '',
+  cover_image_url: '',
+  club_id: '',
+  is_published: false,
+}
+
+export type OrganiserStatus = 'draft' | 'live' | 'happening' | 'past' | 'spiked'
+
+export const ORGANISER_STATUS_LABEL: Record<OrganiserStatus, string> = {
+  draft: 'IN GALLEY',
+  live: 'LIVE',
+  happening: 'ON AIR',
+  past: 'ARCHIVED',
+  spiked: 'SPIKED',
+}
+
+export function deriveOrganiserStatus(event: Event): OrganiserStatus {
+  if (event.is_cancelled) return 'spiked'
+  if (!event.is_published) return 'draft'
+  const now = Date.now()
+  const start = new Date(event.starts_at).getTime()
+  const end = event.ends_at ? new Date(event.ends_at).getTime() : start
+  if (start > now) return 'live'
+  if (now <= end) return 'happening'
+  return 'past'
+}
+
+export interface StudentRow {
+  id: string
+  email: string
+  full_name: string | null
+}
+
+export interface EventRegistrationsResponse {
+  event_id: string
+  total: number
+  students: StudentRow[]
+}
+
 export const PAGE_SIZE = 20
 
 export const EVENT_TYPE_LABEL: Record<EventType, string> = {
