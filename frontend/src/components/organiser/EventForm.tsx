@@ -101,12 +101,21 @@ export default function EventForm({
 
   const update = <K extends keyof EventFormValues>(key: K, value: EventFormValues[K]) => {
     const next = { ...values, [key]: value }
-    /* If start moves to or past the current end, wipe ends_at so it doesn't stay invalid. */
-    if (key === 'starts_at' && next.ends_at && next.starts_at) {
-      if (new Date(next.ends_at) <= new Date(next.starts_at)) {
-        next.ends_at = ''
+
+    /* When start changes, keep ends_at sensible:
+       - if empty → set to start + 1h so the picker opens near the right date
+       - if it's now ≤ start → bump it to start + 1h instead of wiping        */
+    if (key === 'starts_at' && next.starts_at) {
+      const start = new Date(next.starts_at)
+      const noEnd = !next.ends_at
+      const endTooEarly = !!next.ends_at && new Date(next.ends_at) <= start
+      if (noEnd || endTooEarly) {
+        const end = new Date(start.getTime() + 60 * 60 * 1000)
+        const pad = (n: number) => String(n).padStart(2, '0')
+        next.ends_at = `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}T${pad(end.getHours())}:${pad(end.getMinutes())}`
       }
     }
+
     onChange(next)
   }
 
