@@ -1,0 +1,248 @@
+/* ════════════════════════════════════════════════════════════════
+   FormField primitives — editorial inputs
+   ════════════════════════════════════════════════════════════════ */
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.labelText {
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.required {
+  color: var(--crimson);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.hint {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+  margin-left: auto;
+}
+
+.error {
+  font-size: 11px;
+  font-weight: 600;
+  color: hsl(var(--destructive));
+  letter-spacing: 0.02em;
+  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.error::before {
+  content: '⚠';
+  font-size: 10px;
+}
+
+/* ─── Input base ─── */
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text-primary);
+  letter-spacing: -0.005em;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.95) inset;
+}
+
+.input:hover:not(:focus):not(:disabled) {
+  border-color: rgba(0, 0, 0, 0.22);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--crimson);
+  box-shadow:
+    0 0 0 3px rgba(139, 0, 0, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.95) inset;
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.shellError .input {
+  border-color: hsl(var(--destructive));
+  background: hsl(var(--destructive) / 0.04);
+}
+
+.shellError .input:focus {
+  box-shadow: 0 0 0 3px hsl(var(--destructive) / 0.15);
+}
+
+/* ─── Headline variant (big serif input for title) ─── */
+.inputHeadline {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  padding: 14px 16px;
+}
+
+.inputHeadline::placeholder {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-style: italic;
+}
+
+/* ─── Textarea ─── */
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+  line-height: 1.55;
+}
+
+/* ─── Select ─── */
+.select {
+  appearance: none;
+  background-image: linear-gradient(
+    45deg, transparent 50%, var(--text-secondary) 50%),
+    linear-gradient(-45deg, transparent 50%, var(--text-secondary) 50%);
+  background-position:
+    calc(100% - 16px) 50%,
+    calc(100% - 11px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+/* ════════════════ TOGGLE ════════════════ */
+
+.toggle {
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.toggle:hover:not(.toggleDisabled) {
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+.toggleOn {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 0, 0, 0.05),
+    rgba(139, 0, 0, 0.02)
+  );
+  border-color: rgba(139, 0, 0, 0.25);
+}
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.toggleTextWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.toggleTitle {
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.toggleOn .toggleTitle {
+  color: var(--crimson);
+}
+
+.toggleDescription {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* ─── Switch ─── */
+.switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.18);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.22s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--crimson);
+  outline-offset: 3px;
+}
+
+.switchThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toggleOn .switch {
+  background: var(--crimson);
+}
+
+.toggleOn .switchThumb {
+  transform: translateX(20px);
+}
+
+.toggleDisabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.toggleDisabled .switch {
+  cursor: not-allowed;
+}

@@ -8,7 +8,9 @@ import VerifyPage from './pages/VerifyPage'
 import EventsPage from './pages/EventsPage'
 import EventDetailPage from './pages/EventDetailPage'
 import DashboardPage from './pages/DashboardPage'
-import OrganiserPage from './pages/OrganiserPage'
+import OrganiserListPage from './pages/organiser/OrganiserListPage'
+import OrganiserEventFormPage from './pages/organiser/OrganiserEventFormPage'
+import OrganiserEventDetailPage from './pages/organiser/OrganiserEventDetailPage'
 import AdminPage from './pages/AdminPage'
 import NotFoundPage from './pages/NotFoundPage'
 
@@ -37,7 +39,10 @@ export default function App() {
       <Route path="/" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
       <Route path="/events/:id" element={<ProtectedRoute><EventDetailPage /></ProtectedRoute>} />
       <Route path="/me" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-      <Route path="/organiser/*" element={<ProtectedRoute><OrganiserPage /></ProtectedRoute>} />
+      <Route path="/organiser" element={<ProtectedRoute><OrganiserListPage /></ProtectedRoute>} />
+      <Route path="/organiser/events/new" element={<ProtectedRoute><OrganiserEventFormPage /></ProtectedRoute>} />
+      <Route path="/organiser/events/:id" element={<ProtectedRoute><OrganiserEventDetailPage /></ProtectedRoute>} />
+      <Route path="/organiser/events/:id/edit" element={<ProtectedRoute><OrganiserEventFormPage /></ProtectedRoute>} />
       <Route path="/admin/*" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
 
       <Route path="*" element={<NotFoundPage />} />

@@ -32,6 +32,14 @@ export default function Navbar() {
           >
             My Events
           </Link>
+          {(user?.role === 'organiser' || user?.role === 'admin') && (
+            <Link
+              to="/organiser"
+              className={pathname.startsWith('/organiser') ? styles.activeLink : styles.link}
+            >
+              Desk
+            </Link>
+          )}
         </nav>
 
         <div className={styles.actions}>

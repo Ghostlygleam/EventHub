@@ -1,0 +1,128 @@
+/* ════════════════════════════════════════════════════════════════
+   StatusBadge — editorial pill
+   DRAFT → IN GALLEY · LIVE · ON AIR · ARCHIVED · SPIKED
+   ════════════════════════════════════════════════════════════════ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: transparent;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.sm { font-size: 9px; padding: 3px 7px; gap: 5px; }
+.md { font-size: 10px; padding: 4px 9px; gap: 6px; }
+.lg { font-size: 11px; padding: 5px 11px; gap: 7px; }
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.label {
+  position: relative;
+  top: 1px;
+}
+
+/* ─── DRAFT (in galley) ─── */
+.draft {
+  color: hsl(0 0% 35%);
+  background: rgba(0, 0, 0, 0.03);
+  border-color: hsl(0 0% 60%);
+  border-style: dashed;
+}
+
+.draft .dot {
+  background: hsl(0 0% 55%);
+  animation: none;
+}
+
+/* ─── LIVE (published, upcoming) ─── */
+.live {
+  color: hsl(var(--success));
+  background: hsl(var(--success) / 0.08);
+  border-color: hsl(var(--success) / 0.5);
+}
+
+.live .dot {
+  position: relative;
+}
+
+.live .dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: hsl(var(--success));
+  opacity: 0.3;
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { transform: scale(1); opacity: 0.35; }
+  50%      { transform: scale(1.8); opacity: 0; }
+}
+
+/* ─── HAPPENING (on air right now) ─── */
+.happening {
+  color: hsl(var(--warning));
+  background: hsl(var(--warning) / 0.1);
+  border-color: hsl(var(--warning) / 0.6);
+}
+
+.happening .dot {
+  position: relative;
+}
+
+.happening .dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: hsl(var(--warning));
+  opacity: 0.4;
+  animation: livePulse 1.2s ease-in-out infinite;
+}
+
+/* ─── PAST (archived) ─── */
+.past {
+  color: hsl(0 0% 45%);
+  background: rgba(0, 0, 0, 0.04);
+  border-color: hsl(0 0% 70%);
+}
+
+.past .dot {
+  background: hsl(0 0% 60%);
+}
+
+/* ─── SPIKED (cancelled) ─── */
+.spiked {
+  color: hsl(var(--destructive));
+  background: hsl(var(--destructive) / 0.06);
+  border-color: hsl(var(--destructive) / 0.55);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0;
+}
+
+.spiked .label {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+.spiked .dot {
+  background: hsl(var(--destructive));
+  text-decoration: none;
+}
