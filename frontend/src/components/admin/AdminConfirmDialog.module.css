@@ -1,0 +1,201 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px) saturate(1.1);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  animation: backdropIn 0.2s ease;
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.dialog {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: 26px 26px 20px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(22px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 24px 56px rgba(0, 0, 0, 0.32),
+    0 6px 18px rgba(0, 0, 0, 0.14);
+  animation: dialogIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dialogIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.closeBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.04);
+  border: none;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.closeBtn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text-primary);
+}
+
+.closeBtn:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
+.closeBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  background: hsl(0 70% 50% / 0.1);
+  border: 1px solid hsl(0 70% 50% / 0.3);
+  color: hsl(0 70% 45%);
+  border-radius: 4px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  margin-bottom: 12px;
+  width: fit-content;
+}
+
+.eyebrowWarning {
+  background: hsl(var(--warning) / 0.12);
+  border-color: hsl(var(--warning) / 0.4);
+  color: hsl(38 92% 30%);
+}
+
+.title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 24px;
+  line-height: 1.15;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  padding-right: 32px;
+}
+
+.body {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btnGhost,
+.btnConfirm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  border: 1px solid transparent;
+}
+
+.btnGhost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.btnGhost:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-primary);
+  border-color: rgba(0, 0, 0, 0.22);
+}
+
+.btnConfirm {
+  background: hsl(0 65% 48%);
+  color: white;
+  min-width: 140px;
+  box-shadow: 0 4px 12px hsl(0 65% 48% / 0.3);
+}
+
+.btnConfirm:hover:not(:disabled) {
+  background: hsl(0 70% 42%);
+  transform: translateY(-1px);
+}
+
+.btnWarning {
+  background: hsl(var(--warning));
+  color: white;
+  box-shadow: 0 4px 12px hsl(var(--warning) / 0.32);
+}
+
+.btnWarning:hover:not(:disabled) {
+  background: hsl(38 92% 42%);
+}
+
+.btnGhost:focus-visible,
+.btnConfirm:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.btnGhost:disabled,
+.btnConfirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 480px) {
+  .dialog { padding: 22px 18px 16px; }
+  .footer { flex-direction: column-reverse; }
+  .btnGhost, .btnConfirm { width: 100%; }
+}

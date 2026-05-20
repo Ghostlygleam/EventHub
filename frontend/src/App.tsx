@@ -11,7 +11,8 @@ import DashboardPage from './pages/DashboardPage'
 import OrganiserListPage from './pages/organiser/OrganiserListPage'
 import OrganiserEventFormPage from './pages/organiser/OrganiserEventFormPage'
 import OrganiserEventDetailPage from './pages/organiser/OrganiserEventDetailPage'
-import AdminPage from './pages/AdminPage'
+import AdminUsersPage from './pages/admin/AdminUsersPage'
+import AdminLogsPage from './pages/admin/AdminLogsPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -43,7 +44,9 @@ export default function App() {
       <Route path="/organiser/events/new" element={<ProtectedRoute><OrganiserEventFormPage /></ProtectedRoute>} />
       <Route path="/organiser/events/:id" element={<ProtectedRoute><OrganiserEventDetailPage /></ProtectedRoute>} />
       <Route path="/organiser/events/:id/edit" element={<ProtectedRoute><OrganiserEventFormPage /></ProtectedRoute>} />
-      <Route path="/admin/*" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+      <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
+      <Route path="/admin/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
+      <Route path="/admin/logs" element={<ProtectedRoute><AdminLogsPage /></ProtectedRoute>} />
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
