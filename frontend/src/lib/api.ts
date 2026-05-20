@@ -35,6 +35,15 @@ async function request<T>(
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ detail: 'Unknown error' }))
+    /* 403 with a deactivation message means an admin pulled the rug out from under
+       this session — sign the user out instead of letting them see a wall of errors. */
+    if (
+      res.status === 403 &&
+      typeof error?.detail === 'string' &&
+      /deactivated/i.test(error.detail)
+    ) {
+      handleUnauthorized(path)
+    }
     throw new Error(error.detail ?? 'Request failed')
   }
 

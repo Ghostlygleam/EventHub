@@ -223,13 +223,22 @@
 
 /* ─── Responsive: collapse to cards ─── */
 @media (max-width: 720px) {
-  .shell { background: transparent; border: none; }
-  .table, .table thead, .table tbody, .table tr, .table td, .table th {
-    display: block;
+  .shell {
+    background: transparent;
+    border: none;
+    overflow: visible;
   }
-  .table thead { display: none; }
 
-  .tr {
+  .table,
+  .table thead,
+  .table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .table thead { display: none !important; }
+
+  .table tr {
     background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(0, 0, 0, 0.06);
     border-radius: 10px;
@@ -237,23 +246,38 @@
     padding: 12px 14px;
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 6px 12px;
+    grid-template-areas:
+      "email   status"
+      "role    action"
+      "date    .";
+    gap: 8px 12px;
+    align-items: center;
   }
 
-  .td {
+  .table td {
+    display: block;
     padding: 0;
     border: none;
     font-size: 12px;
   }
 
-  .tdNum { display: none; }
+  .table td.tdNum { display: none !important; }
 
-  .tdEmail {
-    grid-column: 1 / -1;
+  .table td.tdEmail {
+    grid-area: email;
+    display: flex !important;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
   }
 
-  .tdRole { grid-column: 1; }
-  .tdStatus { grid-column: 2; justify-self: end; }
-  .tdDate { grid-column: 1; }
-  .tdAction { grid-column: 2; justify-self: end; }
+  .table td.tdRole    { grid-area: role; }
+  .table td.tdStatus  { grid-area: status; justify-self: end; }
+  .table td.tdDate    { grid-area: date; }
+  .table td.tdAction  { grid-area: action; justify-self: end; }
+
+  .roleSelect {
+    font-size: 10px;
+    padding: 3px 22px 3px 7px;
+  }
 }
