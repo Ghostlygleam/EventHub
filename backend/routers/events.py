@@ -5,7 +5,7 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, func, or_, delete
+from sqlalchemy import select, func, or_, and_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
@@ -46,6 +46,7 @@ async def list_events(
     event_status: Optional[str] = Query(None, alias="status"),
     club_id: Optional[UUID] = Query(None),
     search: Optional[str] = Query(None),
+    mine: Optional[bool] = Query(None),
     page: int = Query(1, ge=1),
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -53,14 +54,18 @@ async def list_events(
     PAGE_SIZE = 20
     now = datetime.now(timezone.utc)
 
-    query = select(Event).where(Event.is_cancelled == False)
-
-    if user["role"] == "student":
-        query = query.where(Event.is_published == True)
-    if user["role"] == "organiser":
-        query = query.where(
-            or_(Event.is_published == True, Event.organiser_id == user["user_id"])
-        )
+    if mine:
+        if user["role"] not in ("organiser", "admin"):
+            raise HTTPException(status_code=403, detail="Only organisers can use mine filter")
+        query = select(Event).where(Event.organiser_id == user["user_id"])
+    else:
+        query = select(Event).where(Event.is_cancelled == False)
+        if user["role"] == "student":
+            query = query.where(Event.is_published == True)
+        elif user["role"] == "organiser":
+            query = query.where(
+                or_(Event.is_published == True, Event.organiser_id == user["user_id"])
+            )
 
     if event_type:
         query = query.where(Event.event_type == event_type)
@@ -110,14 +115,22 @@ async def list_events(
     )
     registered_ids = {row.event_id for row in user_regs_result.all()}
 
+    # Batch query: organiser info for all events
+    organiser_ids = {e.organiser_id for e in events}
+    org_result = await db.execute(select(User).where(User.id.in_(organiser_ids)))
+    organisers = {u.id: u for u in org_result.scalars().all()}
+
     events_out = []
     for e in events:
         reg_count = reg_counts.get(e.id, 0)
+        org = organisers.get(e.organiser_id)
         events_out.append({
             **EventResponse.model_validate(e).model_dump(),
             "registered_count": reg_count,
             "spots_left": (e.capacity - reg_count) if e.capacity else None,
             "is_registered": e.id in registered_ids,
+            "organiser_name": org.full_name if org else None,
+            "organiser_email": org.email if org else None,
         })
 
     return {"events": events_out, "page": page, "total": total, "pages": (total + PAGE_SIZE - 1) // PAGE_SIZE}
@@ -147,11 +160,16 @@ async def get_event(
     )
     is_reg = reg_result.scalar_one_or_none() is not None
 
+    org_result = await db.execute(select(User).where(User.id == event.organiser_id))
+    organiser = org_result.scalar_one_or_none()
+
     return {
         **EventResponse.model_validate(event).model_dump(),
         "registered_count": reg_count,
         "spots_left": (event.capacity - reg_count) if event.capacity else None,
         "is_registered": is_reg,
+        "organiser_name": organiser.full_name if organiser else None,
+        "organiser_email": organiser.email if organiser else None,
     }
 
 

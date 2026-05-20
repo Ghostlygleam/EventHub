@@ -111,6 +111,13 @@ create index idx_registrations_student  on registrations (student_id);
 create index idx_audit_logs_actor       on audit_logs (actor_id);
 create index idx_audit_logs_created_at  on audit_logs (created_at);
 
+-- Composite index for the main listing query: WHERE is_cancelled = false (AND optionally is_published = true)
+-- Covers both student view (published only) and organiser/admin view (all non-cancelled).
+create index idx_events_list            on events (is_cancelled, is_published, starts_at);
+
+-- Supports filtering by event type
+create index idx_events_type            on events (event_type);
+
 
 -- ============================================================
 -- Row Level Security (RLS)

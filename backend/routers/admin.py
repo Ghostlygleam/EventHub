@@ -79,6 +79,29 @@ async def list_users(
     }
 
 
+# ── GET /admin/users/:id ────────────────────────────────────
+
+@router.get("/users/{user_id}")
+async def get_user(
+    user_id: UUID,
+    actor: dict = Depends(require_role("admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Returns a single user by ID."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "id": str(user.id),
+        "email": user.email,
+        "full_name": user.full_name,
+        "role": user.role.value,
+        "is_active": user.is_active,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+    }
+
+
 # ── PATCH /admin/users/:id/role ──────────────────────────────
 
 @router.patch("/users/{user_id}/role")
@@ -170,6 +193,41 @@ async def deactivate_user(
     return {"message": "User deactivated", "user_id": str(user_id)}
 
 
+# ── PATCH /admin/users/:id/reactivate ───────────────────────
+
+@router.patch("/users/{user_id}/reactivate")
+async def reactivate_user(
+    user_id: UUID,
+    actor: dict = Depends(require_role("admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Reactivate a previously deactivated user account."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    target_user = result.scalar_one_or_none()
+
+    if target_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if target_user.is_active:
+        raise HTTPException(status_code=400, detail="User is already active")
+
+    target_user.is_active = True
+    await db.commit()
+
+    await write_audit_log(
+        db=db,
+        actor_id=actor["user_id"],
+        action="user_reactivated",
+        target_type="user",
+        target_id=str(user_id),
+        meta={"email": target_user.email},
+    )
+
+    logger.info("Admin %s reactivated user %s", actor["email"], target_user.email)
+
+    return {"message": "User reactivated", "user_id": str(user_id)}
+
+
 # ── GET /admin/logs ──────────────────────────────────────────
 
 @router.get("/logs")
@@ -189,25 +247,28 @@ async def get_logs(
     total = total_result.scalar() or 0
 
     result = await db.execute(
-        select(AuditLog)
+        select(AuditLog, User)
+        .outerjoin(User, AuditLog.actor_id == User.id)
         .order_by(desc(AuditLog.created_at))
         .offset(offset)
         .limit(limit)
     )
-    logs = result.scalars().all()
+    rows = result.all()
 
     return {
         "logs": [
             {
                 "id": str(log.id),
-                "actor_id": str(log.actor_id),
+                "actor_id": str(log.actor_id) if log.actor_id else None,
+                "actor_email": user.email if user else None,
+                "actor_name": user.full_name if user else None,
                 "action": log.action,
                 "target_type": log.target_type,
                 "target_id": str(log.target_id),
                 "metadata": log.meta,
                 "created_at": log.created_at.isoformat() if log.created_at else None,
             }
-            for log in logs
+            for log, user in rows
         ],
         "total": total,
         "page": page,
