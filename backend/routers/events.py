@@ -143,32 +143,41 @@ async def get_event(
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    event = await get_event_or_404(event_id, db)
-
-    if user["role"] == "student" and (not event.is_published or event.is_cancelled):
-        raise HTTPException(status_code=404, detail="Event not found")
-
-    count_result = await db.execute(
-        select(func.count()).where(Registration.event_id == event_id)
+    reg_count_sq = (
+        select(func.count())
+        .where(Registration.event_id == event_id)
+        .scalar_subquery()
     )
-    reg_count = count_result.scalar() or 0
-
-    reg_result = await db.execute(
-        select(Registration).where(
+    is_reg_sq = (
+        select(func.count())
+        .where(
             Registration.event_id == event_id,
             Registration.student_id == user["user_id"],
         )
+        .scalar_subquery()
     )
-    is_reg = reg_result.scalar_one_or_none() is not None
 
-    org_result = await db.execute(select(User).where(User.id == event.organiser_id))
-    organiser = org_result.scalar_one_or_none()
+    result = await db.execute(
+        select(Event, User, reg_count_sq.label("reg_count"), is_reg_sq.label("is_reg"))
+        .outerjoin(User, User.id == Event.organiser_id)
+        .where(Event.id == event_id)
+    )
+    row = result.one_or_none()
+
+    if row is None:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    event, organiser, reg_count, is_reg = row
+    reg_count = reg_count or 0
+
+    if user["role"] == "student" and (not event.is_published or event.is_cancelled):
+        raise HTTPException(status_code=404, detail="Event not found")
 
     return {
         **EventResponse.model_validate(event).model_dump(),
         "registered_count": reg_count,
         "spots_left": (event.capacity - reg_count) if event.capacity else None,
-        "is_registered": is_reg,
+        "is_registered": bool(is_reg),
         "organiser_name": organiser.full_name if organiser else None,
         "organiser_email": organiser.email if organiser else None,
     }
