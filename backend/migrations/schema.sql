@@ -62,6 +62,7 @@ create table events (
     cover_image_url  text,
     is_published     boolean not null default false,
     is_cancelled     boolean not null default false,
+    cancelled_at     timestamptz,                    -- set when is_cancelled flips to true
     created_at       timestamptz not null default now()
 );
 
@@ -117,6 +118,15 @@ create index idx_events_list            on events (is_cancelled, is_published, s
 
 -- Supports filtering by event type
 create index idx_events_type            on events (event_type);
+
+-- Composite for registration lookup by event + user (used in POST /registrations capacity check
+-- and GET /events to determine is_registered for the current user)
+create index idx_registrations_event_user on registrations (event_id, student_id);
+
+-- Trigram indexes to accelerate ILIKE title/description search
+create extension if not exists pg_trgm;
+create index idx_events_title_trgm       on events using gin(title gin_trgm_ops);
+create index idx_events_description_trgm on events using gin(description gin_trgm_ops);
 
 
 -- ============================================================

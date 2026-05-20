@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     email_from: str = "EventHub <noreply@yourdomain.com>"
     app_env: str = "development"
+    page_size: int = 20
 
     @property
     def allowed_domains_list(self) -> list[str]:

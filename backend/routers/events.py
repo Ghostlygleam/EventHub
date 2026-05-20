@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func, or_, and_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.config import settings
 from core.database import get_db
 from core.security import get_current_user, require_role
 from models.event import Event, EventType
@@ -51,7 +52,7 @@ async def list_events(
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    PAGE_SIZE = 20
+    PAGE_SIZE = settings.page_size
     now = datetime.now(timezone.utc)
 
     if mine:
@@ -224,6 +225,7 @@ async def cancel_event(
     students = students_result.scalars().all()
 
     event.is_cancelled = True
+    event.cancelled_at = datetime.now(timezone.utc)
 
     # Remove all registrations for this event
     await db.execute(delete(Registration).where(Registration.event_id == event_id))
@@ -244,23 +246,34 @@ async def cancel_event(
 @router.get("/{event_id}/registrations")
 async def get_event_registrations(
     event_id: UUID,
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
     user: dict = Depends(require_role("organiser", "admin")),
     db: AsyncSession = Depends(get_db),
 ):
     event = await get_event_or_404(event_id, db)
     check_ownership(event, user)
 
+    total_result = await db.execute(
+        select(func.count()).where(Registration.event_id == event_id)
+    )
+    total = total_result.scalar() or 0
+
     result = await db.execute(
         select(User)
         .join(Registration, Registration.student_id == User.id)
         .where(Registration.event_id == event_id)
         .order_by(Registration.registered_at)
+        .offset((page - 1) * limit)
+        .limit(limit)
     )
     students = result.scalars().all()
 
     return {
         "event_id": str(event_id),
-        "total": len(students),
+        "total": total,
+        "page": page,
+        "pages": (total + limit - 1) // limit,
         "students": [
             {"id": str(s.id), "email": s.email, "full_name": s.full_name}
             for s in students

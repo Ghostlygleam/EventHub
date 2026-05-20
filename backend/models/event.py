@@ -32,4 +32,5 @@ class Event(Base):
     cover_image_url = Column(String, nullable=True)
     is_published = Column(Boolean, default=False, nullable=False)
     is_cancelled = Column(Boolean, default=False, nullable=False)
+    cancelled_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
