@@ -14,9 +14,7 @@ class Settings(BaseSettings):
     dev_auth_bypass: bool = False  # set to true in .env for local dev only, never in prod
     cors_origins: str = "http://localhost:3000"
     email_from: str = "EventHub <noreply@yourdomain.com>"
-    dev_auth_bypass: bool = False
     app_env: str = "development"
-    cors_origins: str = "http://localhost:3000"
 
     @property
     def allowed_domains_list(self) -> list[str]:
