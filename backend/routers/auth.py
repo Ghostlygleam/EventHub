@@ -64,14 +64,17 @@ async def verify_otp(request: Request, body: VerifyOTPRequest):
 
     # Dev bypass — code 000000 creates a real user in DB and returns a real JWT
     if settings.dev_auth_bypass and body.token == "000000":
-        # UUID v5 is deterministic — same email always gives same user, no zombie records
-        fake_id = str(uuid5(NAMESPACE_DNS, body.email))
-
         async with AsyncSessionLocal() as db:
-            result = await db.execute(select(User).where(User.id == fake_id))
+            # Look up by EMAIL, not deterministic UUID — otherwise seeded users
+            # (whose id is fixed in the migration) collide with the uuid5(email)
+            # we'd try to insert, hitting the UNIQUE constraint on users.email.
+            result = await db.execute(select(User).where(User.email == body.email))
             user = result.scalar_one_or_none()
 
             if user is None:
+                # New user — give them a deterministic id so re-runs of the bypass
+                # never spawn zombie rows for the same email.
+                fake_id = str(uuid5(NAMESPACE_DNS, body.email))
                 user = User(
                     id=fake_id,
                     email=body.email,
@@ -81,6 +84,11 @@ async def verify_otp(request: Request, body: VerifyOTPRequest):
                 db.add(user)
                 await db.commit()
                 await db.refresh(user)
+
+            # Match the non-bypass path: a deactivated account can't sign in,
+            # even through the dev shortcut.
+            if not user.is_active:
+                raise HTTPException(status_code=403, detail="Your account has been deactivated")
 
         token = create_access_token({
             "user_id": str(user.id),
