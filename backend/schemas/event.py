@@ -62,6 +62,7 @@ class EventResponse(BaseModel):
     cover_image_url: Optional[str] = None
     is_published: bool
     is_cancelled: bool
+    cancelled_at: Optional[datetime] = None
     created_at: datetime
     registered_count: int = 0
     spots_left: Optional[int] = None
