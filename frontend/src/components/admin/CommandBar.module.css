@@ -1,0 +1,83 @@
+.bar {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 12px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 8px 22px rgba(0, 0, 0, 0.12);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.searchWrap {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.searchWrap:focus-within {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.searchWrap svg {
+  color: rgba(255, 255, 255, 0.55);
+  flex-shrink: 0;
+}
+
+.prompt {
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: hsl(var(--success));
+  letter-spacing: 0;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: rgba(255, 255, 255, 0.95);
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+  font-style: italic;
+}
+
+.middle,
+.right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.right {
+  margin-left: auto;
+}
+
+@media (max-width: 560px) {
+  .bar {
+    flex-wrap: wrap;
+  }
+  .searchWrap {
+    flex-basis: 100%;
+  }
+  .middle, .right {
+    flex-basis: 100%;
+  }
+}

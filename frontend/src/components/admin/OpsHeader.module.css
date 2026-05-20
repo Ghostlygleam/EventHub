@@ -1,0 +1,149 @@
+/* ════════════════════════════════════════════════════════════════
+   OpsHeader — masthead for /admin/* surfaces
+   ════════════════════════════════════════════════════════════════ */
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  opacity: 0;
+  animation: opsHeaderIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes opsHeaderIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Brand strip ─── */
+.brandStrip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--text-secondary);
+}
+
+.brandKey { color: var(--crimson); }
+.brandSep { opacity: 0.4; }
+.brandSection { color: var(--text-primary); }
+
+.brandSpacer { flex: 1; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 10px;
+}
+
+.chip strong {
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
+}
+
+.chipLabel {
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+
+/* ─── Body (title + lede) ─── */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(42px, 6vw, 64px);
+  line-height: 0.98;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+}
+
+.title em {
+  font-style: italic;
+  color: var(--crimson);
+}
+
+.lede {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  max-width: 60ch;
+}
+
+/* ─── Segmented tab nav ─── */
+.tabs {
+  display: inline-flex;
+  align-items: stretch;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  width: fit-content;
+  gap: 2px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+
+.tab:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-primary);
+}
+
+.tabActive,
+.tabActive:hover {
+  background: var(--text-primary);
+  color: var(--surface);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--crimson);
+  outline-offset: 2px;
+}
+
+@media (max-width: 560px) {
+  .brandStrip {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .brandSpacer {
+    flex-basis: 100%;
+    height: 4px;
+  }
+
+  .chip { margin-left: 0; }
+}

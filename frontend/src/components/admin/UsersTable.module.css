@@ -1,0 +1,259 @@
+/* ════════════════════════════════════════════════════════════════
+   UsersTable — Ops console roster
+   ════════════════════════════════════════════════════════════════ */
+
+.shell {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.th {
+  text-align: left;
+  padding: 11px 14px;
+  background: rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.thNum { width: 56px; text-align: center; }
+.thAction { width: 130px; }
+
+.tr {
+  transition: background 0.12s ease;
+}
+
+.tr:hover {
+  background: rgba(139, 0, 0, 0.025);
+}
+
+.trInactive {
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.trInactive .email,
+.trInactive .fullName {
+  opacity: 0.55;
+}
+
+.trPending {
+  opacity: 0.72;
+}
+
+.td {
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  vertical-align: middle;
+  font-size: 13px;
+}
+
+.tr:last-child .td {
+  border-bottom: none;
+}
+
+.tdNum {
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.tdEmail {
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.email {
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  letter-spacing: 0.005em;
+  word-break: break-all;
+}
+
+.fullName {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.youTag {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 1px 6px;
+  background: var(--crimson-glass);
+  color: var(--crimson);
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  width: fit-content;
+}
+
+.tdRole {
+  min-width: 170px;
+}
+
+.roleLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.roleSelect {
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  padding: 4px 24px 4px 8px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.16s ease;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%),
+    linear-gradient(-45deg, transparent 50%, var(--text-secondary) 50%);
+  background-position: calc(100% - 12px) 50%, calc(100% - 7px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.roleSelect:hover:not(:disabled) {
+  border-color: var(--crimson);
+  color: var(--crimson);
+}
+
+.roleSelect:focus-visible {
+  outline: 2px solid var(--crimson);
+  outline-offset: 1px;
+}
+
+.roleSelect:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tdStatus { width: 132px; }
+
+.tdDate {
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.tdAction { text-align: right; }
+
+.actionDanger,
+.actionRestore {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.actionDanger {
+  color: hsl(0 65% 48%);
+  border-color: hsl(0 65% 48% / 0.3);
+}
+
+.actionDanger:hover:not(:disabled) {
+  background: hsl(0 65% 48% / 0.08);
+  border-color: hsl(0 65% 48% / 0.6);
+}
+
+.actionRestore {
+  color: hsl(var(--success));
+  border-color: hsl(var(--success) / 0.35);
+}
+
+.actionRestore:hover:not(:disabled) {
+  background: hsl(var(--success) / 0.08);
+  border-color: hsl(var(--success) / 0.6);
+}
+
+.actionDanger:focus-visible,
+.actionRestore:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.actionDanger:disabled,
+.actionRestore:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Responsive: collapse to cards ─── */
+@media (max-width: 720px) {
+  .shell { background: transparent; border: none; }
+  .table, .table thead, .table tbody, .table tr, .table td, .table th {
+    display: block;
+  }
+  .table thead { display: none; }
+
+  .tr {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 12px;
+  }
+
+  .td {
+    padding: 0;
+    border: none;
+    font-size: 12px;
+  }
+
+  .tdNum { display: none; }
+
+  .tdEmail {
+    grid-column: 1 / -1;
+  }
+
+  .tdRole { grid-column: 1; }
+  .tdStatus { grid-column: 2; justify-self: end; }
+  .tdDate { grid-column: 1; }
+  .tdAction { grid-column: 2; justify-self: end; }
+}

@@ -1,0 +1,159 @@
+/* ════════════════════════════════════════════════════════════════
+   LogsTable — "wire feed" of audit entries
+   ════════════════════════════════════════════════════════════════ */
+
+.feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entry {
+  --col: hsl(var(--entry-accent));
+
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 18px;
+  padding: 14px 16px;
+
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-left: 3px solid var(--col);
+  border-radius: 0 10px 10px 0;
+
+  opacity: 0;
+  animation: entryIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transition: background 0.15s ease;
+}
+
+.entry:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+@keyframes entryIn {
+  from { opacity: 0; transform: translateX(-4px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ─── Time column ─── */
+.timeCol {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+.time {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+
+.relative {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ─── Body ─── */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.actionChip {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 3px 8px;
+  background: hsl(var(--entry-accent) / 0.1);
+  border: 1px solid hsl(var(--entry-accent) / 0.35);
+  border-radius: 3px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: hsl(var(--entry-accent));
+  margin-bottom: 2px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.rowLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.rowValue {
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12px;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+/* ─── Delta (role change visualization) ─── */
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.deltaOld {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.deltaArrow {
+  color: var(--text-muted);
+}
+
+.deltaNew {
+  color: hsl(var(--entry-accent));
+  text-transform: uppercase;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+  .entry {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .timeCol {
+    flex-direction: row;
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .row {
+    grid-template-columns: 60px 1fr;
+    gap: 8px;
+  }
+}

@@ -40,6 +40,14 @@ export default function Navbar() {
               Desk
             </Link>
           )}
+          {user?.role === 'admin' && (
+            <Link
+              to="/admin/users"
+              className={pathname.startsWith('/admin') ? styles.activeLink : styles.link}
+            >
+              Console
+            </Link>
+          )}
         </nav>
 
         <div className={styles.actions}>
