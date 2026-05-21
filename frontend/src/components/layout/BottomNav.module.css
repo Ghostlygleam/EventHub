@@ -1,3 +1,7 @@
+/* BottomNav superseded by the hamburger top-sheet (FE-08).
+   Kept in the tree as fallback, but hidden everywhere — hamburger handles all
+   mobile navigation now. To revive: drop the `display: none` here and the
+   one in the media query will pick it back up at ≤768px. */
 .nav {
   display: none;
   position: fixed;
@@ -44,8 +48,10 @@
   letter-spacing: 0.02em;
 }
 
+/* Previously surfaced on mobile — now superseded by the hamburger top-sheet.
 @media (max-width: 768px) {
   .nav {
     display: flex;
   }
 }
+*/
