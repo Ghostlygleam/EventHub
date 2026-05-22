@@ -5,7 +5,7 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, func, or_, and_, delete
+from sqlalchemy import select, func, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
@@ -60,6 +60,7 @@ async def list_events(
     club_id: Optional[UUID] = Query(None),
     search: Optional[str] = Query(None),
     mine: Optional[bool] = Query(None),
+    include_cancelled: bool = Query(False),
     page: int = Query(1, ge=1),
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -71,8 +72,13 @@ async def list_events(
         if user["role"] not in ("organiser", "admin"):
             raise HTTPException(status_code=403, detail="Only organisers can use mine filter")
         query = select(Event).where(Event.organiser_id == user["user_id"])
+        if not include_cancelled:
+            query = query.where(Event.is_cancelled == False)
     else:
-        query = select(Event).where(Event.is_cancelled == False)
+        if not include_cancelled:
+            query = select(Event).where(Event.is_cancelled == False)
+        else:
+            query = select(Event)
         if user["role"] == "student":
             query = query.where(Event.is_published == True)
         elif user["role"] == "organiser":
@@ -277,9 +283,9 @@ async def cancel_event(
 
     event.is_cancelled = True
     event.cancelled_at = datetime.now(timezone.utc)
-
-    # Remove all registrations for this event
-    await db.execute(delete(Registration).where(Registration.event_id == event_id))
+    # Registrations are intentionally kept — they serve as the student's history trail.
+    # GET /registrations/me returns them in the "cancelled" bucket so the UI can show
+    # "Cancelled by organiser" instead of silently dropping the event from the dashboard.
     await db.commit()
 
     # Send cancellation email to each student (fire-and-forget, don't block on failures)

@@ -34,8 +34,10 @@ async def my_registrations(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Returns all events the current user is registered for.
-    Split into upcoming and past so the frontend can render both sections.
+    Returns all events the current user is registered for, split into three buckets:
+    - upcoming:  non-cancelled events that haven't started yet
+    - past:      non-cancelled events that have already started/ended
+    - cancelled: events that were cancelled by the organiser (shown as "Cancelled by organiser")
     """
     now = datetime.now(timezone.utc)
 
@@ -49,6 +51,7 @@ async def my_registrations(
 
     upcoming = []
     past = []
+    cancelled = []
 
     event_ids = [e.id for e in events]
 
@@ -67,12 +70,14 @@ async def my_registrations(
         event_data["registered_count"] = reg_count
         event_data["spots_left"] = (e.capacity - reg_count) if e.capacity else None
 
-        if e.starts_at > now:
+        if e.is_cancelled:
+            cancelled.append(event_data)
+        elif e.starts_at > now:
             upcoming.append(event_data)
         else:
             past.append(event_data)
 
-    return {"upcoming": upcoming, "past": past}
+    return {"upcoming": upcoming, "past": past, "cancelled": cancelled}
 
 
 # ── POST /registrations ──────────────────────────────────────
