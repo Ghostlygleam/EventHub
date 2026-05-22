@@ -13,6 +13,7 @@ from sqlalchemy import select
 
 from core.config import settings
 from core.limiter import limiter
+from core.otp_limiter import otp_limiter
 from core.security import create_access_token
 from core.database import AsyncSessionLocal
 from models.user import User, UserRole
@@ -29,14 +30,23 @@ def is_valid_domain(email: str) -> bool:
 
 
 @router.post("/send-otp")
-@limiter.limit("5/minute")
+@limiter.limit("10/hour")          # per-IP: max 10 across any email per hour
 async def send_otp(request: Request, body: SendOTPRequest):
     if not is_valid_domain(body.email):
         raise HTTPException(status_code=400, detail="Only university emails are allowed")
 
-    # Dev bypass — skip Supabase, just tell the frontend to use 000000
+    # Dev bypass — skip rate limiting and Supabase
     if settings.dev_auth_bypass:
         return {"message": "OTP sent (dev bypass — use code 000000)"}
+
+    # Per-email rate limit: 1 per 60 s, 5 per hour
+    allowed, retry_after = otp_limiter.check(body.email)
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many requests. Try again in {retry_after} seconds.",
+            headers={"Retry-After": str(retry_after)},
+        )
 
     async with httpx.AsyncClient() as client:
         response = await client.post(

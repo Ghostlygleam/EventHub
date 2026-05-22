@@ -1,14 +1,31 @@
 # backend/main.py
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import _rate_limit_exceeded_handler
+from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from core.config import settings
 from core.limiter import limiter
 from routers import auth, clubs, events, registrations, admin
+
+
+async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    """
+    Return 429 with {"detail": "..."} body and Retry-After header.
+    Matches the format used by manual per-email 429s in auth.py.
+    """
+    response = JSONResponse(
+        status_code=429,
+        content={"detail": "Too many requests. Please slow down and try again later."},
+    )
+    # Let slowapi inject X-RateLimit-* and Retry-After headers
+    response = request.app.state.limiter._inject_headers(
+        response, request.state.view_rate_limit
+    )
+    return response
+
 
 app = FastAPI(
     title="EventHub API",
@@ -17,7 +34,7 @@ app = FastAPI(
 )
 
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
 app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(
