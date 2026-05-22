@@ -6,6 +6,7 @@ from datetime import datetime
 from uuid import UUID
 
 from models.event import EventType
+from schemas.club import ClubSummary
 
 
 class EventCreate(BaseModel):
@@ -37,6 +38,7 @@ class EventUpdate(BaseModel):
     ends_at: Optional[datetime] = None
     capacity: Optional[int] = Field(None, gt=0)
     speaker_name: Optional[str] = None
+    club_id: Optional[UUID] = None
     cover_image_url: Optional[str] = None
     is_published: Optional[bool] = None
 
@@ -58,6 +60,7 @@ class EventResponse(BaseModel):
     capacity: Optional[int] = None
     speaker_name: Optional[str] = None
     club_id: Optional[UUID] = None
+    club: Optional[ClubSummary] = None  # populated by router when club_id is set
     organiser_id: UUID
     cover_image_url: Optional[str] = None
     is_published: bool

@@ -24,10 +24,7 @@ class Event(Base):
     ends_at = Column(DateTime(timezone=True), nullable=True)
     capacity = Column(Integer, nullable=True)
     speaker_name = Column(String, nullable=True)
-    # club_id kept as a plain UUID column until the `clubs` table & router land.
-    # Was: ForeignKey("clubs.id") — broke every INSERT/UPDATE because the referenced
-    # table doesn't exist yet (SQLAlchemy aborts at flush during table sorting).
-    club_id = Column(UUID(as_uuid=True), nullable=True)
+    club_id = Column(UUID(as_uuid=True), ForeignKey("clubs.id"), nullable=True)
     organiser_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     cover_image_url = Column(String, nullable=True)
     is_published = Column(Boolean, default=False, nullable=False)
