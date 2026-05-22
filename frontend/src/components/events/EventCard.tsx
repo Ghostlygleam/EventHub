@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { MapPin, Users, ArrowUpRight, CheckCircle2, BookOpen, Sparkles, Wrench, Calendar, Ban } from 'lucide-react'
+import { MapPin, Users, ArrowUpRight, CheckCircle2, BookOpen, Sparkles, Wrench, Calendar, Ban, Library } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import {
   EVENT_TYPE_LABEL,
@@ -97,6 +97,14 @@ export default function EventCard({ event, index = 0 }: EventCardProps) {
 
       <div className={styles.body}>
         <h3 className={styles.title}>{event.title}</h3>
+
+        {event.club && (
+          <span className={styles.societyChip} title={`Hosted by ${event.club.name}`}>
+            <Library size={11} strokeWidth={2.4} />
+            <span className={styles.societyLabel}>hosted by</span>
+            <span className={styles.societyName}>{event.club.name}</span>
+          </span>
+        )}
 
         {event.speaker_name && (
           <p className={styles.speaker}>

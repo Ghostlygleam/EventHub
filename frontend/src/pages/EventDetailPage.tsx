@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Mic2,
   Building2,
+  Library,
   RotateCcw,
 } from 'lucide-react'
 
@@ -222,6 +223,19 @@ function EventDetailView({ event, onRegister, onCancel, isRegistering, isCancell
                 <h2 className={styles.blockTitle}>Speaker</h2>
               </div>
               <p className={styles.blockBody}>{event.speaker_name}</p>
+            </section>
+          )}
+
+          {event.club && (
+            <section className={cn(styles.section, styles.sectionBlock, styles.sectionSociety)}>
+              <div className={styles.blockHead}>
+                <Library size={16} strokeWidth={2.2} />
+                <h2 className={styles.blockTitle}>Hosted by</h2>
+              </div>
+              <p className={styles.blockBody}>
+                <span className={styles.societyName}>{event.club.name}</span>
+                <span className={styles.societyHint}>society</span>
+              </p>
             </section>
           )}
 

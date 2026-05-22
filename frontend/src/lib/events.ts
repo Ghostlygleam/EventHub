@@ -1,6 +1,11 @@
 export type EventType = 'lecture' | 'club' | 'workshop' | 'other'
 export type EventStatus = 'upcoming' | 'past'
 
+export interface ClubEmbed {
+  id: string
+  name: string
+}
+
 export interface Event {
   id: string
   title: string
@@ -12,6 +17,10 @@ export interface Event {
   capacity: number | null
   speaker_name: string | null
   organiser_id: string
+  /** UUID of the linked club, if any. */
+  club_id?: string | null
+  /** Backend embeds `{ id, name }` when `club_id` is set. */
+  club?: ClubEmbed | null
   cover_image_url: string | null
   is_published: boolean
   is_cancelled: boolean
