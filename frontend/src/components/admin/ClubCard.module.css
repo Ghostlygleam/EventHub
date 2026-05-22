@@ -1,0 +1,273 @@
+/* ════════════════════════════════════════════════════════════════
+   ClubCard — Ops Console card for a single society
+   ════════════════════════════════════════════════════════════════ */
+
+.card {
+  --accent: hsl(var(--club-accent));
+  --accent-soft: hsl(var(--club-accent) / 0.1);
+  --accent-line: hsl(var(--club-accent) / 0.35);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px 16px 24px;
+
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(20, 6, 6, 0.04);
+  overflow: hidden;
+
+  opacity: 0;
+  animation: cardIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-line);
+  box-shadow:
+    0 10px 28px rgba(20, 6, 6, 0.08),
+    0 2px 6px rgba(20, 6, 6, 0.04);
+}
+
+.cardInactive {
+  opacity: 0.7;
+  filter: grayscale(0.4);
+}
+
+.cardInactive .name {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Accent rail */
+.accentRail {
+  position: absolute;
+  left: 0;
+  top: 16px;
+  bottom: 16px;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+}
+
+/* ─── Head ─── */
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.kicker {
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* ─── Body ─── */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.name {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+}
+
+.description {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.6em;
+}
+
+.descriptionEmpty {
+  color: var(--text-muted);
+}
+
+/* ─── Meta row ─── */
+.meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+}
+
+.ownerChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ownerAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.4), transparent 60%),
+    var(--accent-soft);
+  border: 1.5px solid var(--accent-line);
+  border-radius: 9px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.ownerText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ownerLabel {
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+}
+
+.ownerEmail {
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11.5px;
+  color: var(--text-primary);
+  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.eventsChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  border-radius: 999px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+.eventsChip strong {
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* ─── Actions ─── */
+.actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  margin-top: 2px;
+}
+
+.editBtn,
+.disbandBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 7px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  color: var(--text-primary);
+}
+
+.editBtn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.disbandBtn {
+  margin-left: auto;
+  color: hsl(0 65% 48%);
+  border-color: hsl(0 65% 48% / 0.3);
+}
+
+.disbandBtn:hover {
+  background: hsl(0 65% 48% / 0.08);
+  border-color: hsl(0 65% 48% / 0.6);
+}
+
+.editBtn:focus-visible,
+.disbandBtn:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.disbandedTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 6px 12px;
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 560px) {
+  .card {
+    padding: 16px 16px 14px 20px;
+  }
+
+  .name {
+    font-size: 20px;
+  }
+
+  .ownerEmail {
+    font-size: 11px;
+  }
+}

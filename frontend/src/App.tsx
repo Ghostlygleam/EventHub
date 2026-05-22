@@ -12,6 +12,7 @@ import OrganiserListPage from './pages/organiser/OrganiserListPage'
 import OrganiserEventFormPage from './pages/organiser/OrganiserEventFormPage'
 import OrganiserEventDetailPage from './pages/organiser/OrganiserEventDetailPage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
+import AdminClubsPage from './pages/admin/AdminClubsPage'
 import AdminLogsPage from './pages/admin/AdminLogsPage'
 import NotFoundPage from './pages/NotFoundPage'
 
@@ -46,6 +47,7 @@ export default function App() {
       <Route path="/organiser/events/:id/edit" element={<ProtectedRoute><OrganiserEventFormPage /></ProtectedRoute>} />
       <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
       <Route path="/admin/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
+      <Route path="/admin/clubs" element={<ProtectedRoute><AdminClubsPage /></ProtectedRoute>} />
       <Route path="/admin/logs" element={<ProtectedRoute><AdminLogsPage /></ProtectedRoute>} />
 
       <Route path="*" element={<NotFoundPage />} />
