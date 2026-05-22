@@ -12,11 +12,10 @@ from core.database import get_db
 from core.security import get_current_user, require_role
 from models.club import Club
 from models.event import Event
+from models.user import User
 from schemas.club import ClubCreate, ClubUpdate, ClubResponse
 
 router = APIRouter()
-
-_PAGE_SIZE = 20
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -36,12 +35,47 @@ def check_club_ownership(club: Club, user: dict) -> None:
         raise HTTPException(status_code=403, detail="You can only modify your own clubs")
 
 
+async def enrich_clubs(clubs: list[Club], db: AsyncSession) -> list[dict]:
+    """
+    Attach owner_email and events_count to a list of Club rows.
+    Uses two batch queries — no N+1.
+    """
+    if not clubs:
+        return []
+
+    club_ids  = [c.id for c in clubs]
+    owner_ids = list({c.owner_id for c in clubs})
+
+    # Batch: non-cancelled events count per club
+    counts_result = await db.execute(
+        select(Event.club_id, func.count().label("cnt"))
+        .where(Event.club_id.in_(club_ids), Event.is_cancelled == False)
+        .group_by(Event.club_id)
+    )
+    event_counts: dict = {row.club_id: row.cnt for row in counts_result.all()}
+
+    # Batch: owner emails
+    owners_result = await db.execute(
+        select(User.id, User.email).where(User.id.in_(owner_ids))
+    )
+    owner_emails: dict = {row.id: row.email for row in owners_result.all()}
+
+    out = []
+    for club in clubs:
+        data = ClubResponse.model_validate(club).model_dump()
+        data["owner_email"]  = owner_emails.get(club.owner_id)
+        data["events_count"] = event_counts.get(club.id, 0)
+        out.append(data)
+    return out
+
+
 # ── GET /clubs ────────────────────────────────────────────────────────────────
 
 @router.get("")
 async def list_clubs(
     search: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -53,15 +87,15 @@ async def list_clubs(
     count_result = await db.execute(select(func.count()).select_from(query.subquery()))
     total = count_result.scalar()
 
-    query = query.order_by(Club.name).offset((page - 1) * _PAGE_SIZE).limit(_PAGE_SIZE)
+    query = query.order_by(Club.name).offset((page - 1) * size).limit(size)
     result = await db.execute(query)
     clubs = result.scalars().all()
 
     return {
-        "clubs": [ClubResponse.model_validate(c) for c in clubs],
+        "clubs": await enrich_clubs(list(clubs), db),
         "page": page,
         "total": total,
-        "pages": (total + _PAGE_SIZE - 1) // _PAGE_SIZE,
+        "pages": (total + size - 1) // size,
     }
 
 
@@ -77,7 +111,8 @@ async def get_club(
     # Inactive clubs are hidden from non-admins
     if not club.is_active and user["role"] != "admin":
         raise HTTPException(status_code=404, detail="Club not found")
-    return ClubResponse.model_validate(club)
+    enriched = await enrich_clubs([club], db)
+    return enriched[0]
 
 
 # ── POST /clubs ───────────────────────────────────────────────────────────────
@@ -85,7 +120,7 @@ async def get_club(
 @router.post("", status_code=201)
 async def create_club(
     body: ClubCreate,
-    user: dict = Depends(require_role("organiser", "admin")),
+    user: dict = Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db),
 ):
     # Enforce unique name
@@ -97,7 +132,8 @@ async def create_club(
     db.add(club)
     await db.commit()
     await db.refresh(club)
-    return ClubResponse.model_validate(club)
+    enriched = await enrich_clubs([club], db)
+    return enriched[0]
 
 
 # ── PATCH /clubs/{id} ────────────────────────────────────────────────────────
@@ -131,7 +167,8 @@ async def update_club(
 
     await db.commit()
     await db.refresh(club)
-    return ClubResponse.model_validate(club)
+    enriched = await enrich_clubs([club], db)
+    return enriched[0]
 
 
 # ── DELETE /clubs/{id} — soft delete ─────────────────────────────────────────
