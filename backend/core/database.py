@@ -11,6 +11,10 @@ from core.config import settings
 engine = create_async_engine(
     settings.database_url,
     echo=False,  # set to True temporarily if you want to see SQL queries in logs
+    # Keep more connections open so concurrent requests don't queue waiting for a slot.
+    pool_size=20,       # steady-state connections kept alive
+    max_overflow=10,    # extra connections allowed under burst (total max: 30)
+    pool_pre_ping=True, # test connection before handing it out — avoids stale-conn errors
     # Supabase / pgbouncer in transaction-mode does not survive asyncpg's
     # prepared-statement cache: it raises DuplicatePreparedStatementError on
     # connection reuse. Disabling both caches keeps every query unprepared.
