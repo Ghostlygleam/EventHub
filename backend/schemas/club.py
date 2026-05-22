@@ -22,8 +22,10 @@ class ClubResponse(BaseModel):
     name: str
     description: Optional[str] = None
     owner_id: UUID
+    owner_email: Optional[str] = None   # enriched via JOIN on users
     is_active: bool
     created_at: datetime
+    events_count: int = 0               # non-cancelled events linked to this club
 
     class Config:
         from_attributes = True
