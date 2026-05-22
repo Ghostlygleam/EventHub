@@ -160,8 +160,9 @@ async def deactivate_user(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Deactivate a user account. They will get 403 on next request
-    even if their JWT is still valid (checked in get_current_user).
+    Deactivate a user account.
+    The user's existing JWT will stop working within 24 h (token TTL).
+    is_active is embedded in the token at issue time — no per-request DB lookup.
     """
     result = await db.execute(select(User).where(User.id == user_id))
     target_user = result.scalar_one_or_none()

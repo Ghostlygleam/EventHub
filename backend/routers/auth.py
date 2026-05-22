@@ -94,6 +94,7 @@ async def verify_otp(request: Request, body: VerifyOTPRequest):
             "user_id": str(user.id),
             "email": user.email,
             "role": user.role.value,
+            "is_active": user.is_active,
         })
 
         return TokenResponse(
@@ -152,6 +153,7 @@ async def verify_otp(request: Request, body: VerifyOTPRequest):
             "user_id": str(user.id),
             "email": user.email,
             "role": user.role.value,
+            "is_active": user.is_active,
         })
 
         return TokenResponse(

@@ -9,12 +9,14 @@ from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
-from sqlalchemy import select
 
 from core.config import settings
 
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+# 24 h — short enough that deactivation propagates within one day without a Redis blocklist.
+# Previously 7 days, but the per-request DB lookup that enforced is_active in real-time
+# was causing 5-7 s latency on every protected endpoint (one Supabase RTT per request).
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
 security = HTTPBearer()
 
@@ -42,27 +44,20 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> dict:
     """
-    Decode the JWT from the Authorization header and verify the user is still active.
-    Returns the payload dict: {"user_id": ..., "email": ..., "role": ...}
+    Decode the JWT and return the payload.
+    is_active is embedded in the token at issue time — no DB round-trip needed.
+
+    Trade-off: a deactivated user keeps access until their token expires (≤24 h).
+    This is acceptable for the student-event use case and eliminates the 5-7 s
+    latency that a per-request Supabase SELECT was adding to every endpoint.
     """
     payload = decode_token(credentials.credentials)
 
-    # Check that the user hasn't been deactivated since the token was issued.
-    # We import here to avoid circular imports between security and database modules.
-    from core.database import AsyncSessionLocal
-    from models.user import User
-
-    async with AsyncSessionLocal() as db:
-        result = await db.execute(
-            select(User).where(User.id == payload.get("user_id"))
+    if not payload.get("is_active", True):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been deactivated",
         )
-        user = result.scalar_one_or_none()
-
-        if user is None or not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Your account has been deactivated",
-            )
 
     return payload
 
