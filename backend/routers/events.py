@@ -304,7 +304,7 @@ async def cancel_event(
 async def get_event_registrations(
     event_id: UUID,
     page: int = Query(1, ge=1),
-    limit: int = Query(50, ge=1, le=200),
+    size: int = Query(20, ge=1, le=100),
     user: dict = Depends(require_role("organiser", "admin")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -321,8 +321,8 @@ async def get_event_registrations(
         .join(Registration, Registration.student_id == User.id)
         .where(Registration.event_id == event_id)
         .order_by(Registration.registered_at)
-        .offset((page - 1) * limit)
-        .limit(limit)
+        .offset((page - 1) * size)
+        .limit(size)
     )
     students = result.scalars().all()
 
@@ -330,7 +330,8 @@ async def get_event_registrations(
         "event_id": str(event_id),
         "total": total,
         "page": page,
-        "pages": (total + limit - 1) // limit,
+        "size": size,
+        "pages": (total + size - 1) // size,
         "students": [
             {"id": str(s.id), "email": s.email, "full_name": s.full_name}
             for s in students
