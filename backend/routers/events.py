@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy import select, func, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +17,7 @@ from models.registration import Registration
 from models.user import User
 from schemas.event import EventCreate, EventUpdate, EventResponse
 from services.email import send_cancellation_notice
+from services.storage import upload_event_cover, ALLOWED_MIME_TYPES, MAX_FILE_SIZE
 import csv
 import io
 from fastapi.responses import Response
@@ -260,6 +261,53 @@ async def update_event(
     resp = EventResponse.model_validate(event).model_dump()
     resp["club"] = {"id": club.id, "name": club.name} if club else None
     return resp
+
+
+# ── POST /events/:id/cover ───────────────────────────────────
+
+@router.post("/{event_id}/cover")
+async def upload_cover(
+    event_id: UUID,
+    file: UploadFile = File(...),
+    user: dict = Depends(require_role("organiser", "admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Upload a cover image for an event.
+    Allowed types: JPEG, PNG, WebP. Max size: 2 MB.
+    Updates event.cover_image_url and returns the new public URL.
+    """
+    event = await get_event_or_404(event_id, db)
+    check_ownership(event, user)
+
+    if event.is_cancelled:
+        raise HTTPException(status_code=400, detail="Cannot update a cancelled event")
+
+    # Validate MIME type
+    if file.content_type not in ALLOWED_MIME_TYPES:
+        raise HTTPException(
+            status_code=415,
+            detail="Unsupported file type. Allowed: image/jpeg, image/png, image/webp",
+        )
+
+    # Read file and validate size
+    file_bytes = await file.read()
+    if len(file_bytes) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large. Maximum allowed size is 2 MB",
+        )
+
+    # Upload to Supabase Storage
+    try:
+        url = await upload_event_cover(str(event_id), file_bytes, file.content_type)
+    except RuntimeError:
+        raise HTTPException(status_code=502, detail="Image upload failed. Please try again")
+
+    event.cover_image_url = url
+    await db.commit()
+
+    return {"cover_image_url": url}
 
 
 @router.delete("/{event_id}")
