@@ -9,6 +9,7 @@ from uuid import UUID
 class ClubCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     description: Optional[str] = None
+    owner_id: Optional[UUID] = None  # if omitted, defaults to the requesting admin
 
 
 class ClubUpdate(BaseModel):

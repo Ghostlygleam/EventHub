@@ -128,7 +128,9 @@ async def create_club(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="A club with this name already exists")
 
-    club = Club(**body.model_dump(), owner_id=user["user_id"])
+    owner_id = str(body.owner_id) if body.owner_id else user["user_id"]
+    data = body.model_dump(exclude={"owner_id"})
+    club = Club(**data, owner_id=owner_id)
     db.add(club)
     await db.commit()
     await db.refresh(club)
