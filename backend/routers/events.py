@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.config import settings
 from core.database import get_db
 from core.security import get_current_user, require_role
+from models.club import Club
 from models.event import Event, EventType
 from models.registration import Registration
 from models.user import User
@@ -38,6 +39,17 @@ def check_ownership(event: Event, user: dict):
         return
     if str(event.organiser_id) != user["user_id"]:
         raise HTTPException(status_code=403, detail="You can only modify your own events")
+
+
+async def validate_club_id(club_id, db: AsyncSession):
+    """Return the Club if club_id is provided and active, else raise 422."""
+    if club_id is None:
+        return None
+    result = await db.execute(select(Club).where(Club.id == club_id))
+    club = result.scalar_one_or_none()
+    if club is None or not club.is_active:
+        raise HTTPException(status_code=422, detail="club_id references a club that does not exist or is inactive")
+    return club
 
 
 
@@ -121,10 +133,18 @@ async def list_events(
     org_result = await db.execute(select(User).where(User.id.in_(organiser_ids)))
     organisers = {u.id: u for u in org_result.scalars().all()}
 
+    # Batch query: clubs for events that have a club_id
+    club_ids = {e.club_id for e in events if e.club_id}
+    clubs_map: dict = {}
+    if club_ids:
+        clubs_result = await db.execute(select(Club).where(Club.id.in_(club_ids)))
+        clubs_map = {c.id: c for c in clubs_result.scalars().all()}
+
     events_out = []
     for e in events:
         reg_count = reg_counts.get(e.id, 0)
         org = organisers.get(e.organiser_id)
+        club = clubs_map.get(e.club_id) if e.club_id else None
         events_out.append({
             **EventResponse.model_validate(e).model_dump(),
             "registered_count": reg_count,
@@ -132,6 +152,7 @@ async def list_events(
             "is_registered": e.id in registered_ids,
             "organiser_name": org.full_name if org else None,
             "organiser_email": org.email if org else None,
+            "club": {"id": club.id, "name": club.name} if club else None,
         })
 
     return {"events": events_out, "page": page, "total": total, "pages": (total + PAGE_SIZE - 1) // PAGE_SIZE}
@@ -158,8 +179,9 @@ async def get_event(
     )
 
     result = await db.execute(
-        select(Event, User, reg_count_sq.label("reg_count"), is_reg_sq.label("is_reg"))
+        select(Event, User, Club, reg_count_sq.label("reg_count"), is_reg_sq.label("is_reg"))
         .outerjoin(User, User.id == Event.organiser_id)
+        .outerjoin(Club, Club.id == Event.club_id)
         .where(Event.id == event_id)
     )
     row = result.one_or_none()
@@ -167,7 +189,7 @@ async def get_event(
     if row is None:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    event, organiser, reg_count, is_reg = row
+    event, organiser, club, reg_count, is_reg = row
     reg_count = reg_count or 0
 
     if user["role"] == "student" and (not event.is_published or event.is_cancelled):
@@ -180,6 +202,7 @@ async def get_event(
         "is_registered": bool(is_reg),
         "organiser_name": organiser.full_name if organiser else None,
         "organiser_email": organiser.email if organiser else None,
+        "club": {"id": club.id, "name": club.name} if club else None,
     }
 
 
@@ -189,11 +212,14 @@ async def create_event(
     user: dict = Depends(require_role("organiser", "admin")),
     db: AsyncSession = Depends(get_db),
 ):
+    club = await validate_club_id(body.club_id, db)
     event = Event(**body.model_dump(), organiser_id=user["user_id"])
     db.add(event)
     await db.commit()
     await db.refresh(event)
-    return EventResponse.model_validate(event)
+    resp = EventResponse.model_validate(event).model_dump()
+    resp["club"] = {"id": club.id, "name": club.name} if club else None
+    return resp
 
 
 @router.patch("/{event_id}")
@@ -207,11 +233,27 @@ async def update_event(
     check_ownership(event, user)
     if event.is_cancelled:
         raise HTTPException(status_code=400, detail="Cannot edit a cancelled event")
-    for field, value in body.model_dump(exclude_unset=True).items():
+
+    updates = body.model_dump(exclude_unset=True)
+
+    # Validate club_id if it's being changed
+    club = None
+    if "club_id" in updates:
+        club = await validate_club_id(updates["club_id"], db)
+
+    for field, value in updates.items():
         setattr(event, field, value)
     await db.commit()
     await db.refresh(event)
-    return EventResponse.model_validate(event)
+
+    # Fetch club for response if event already had one and wasn't changed in this request
+    if club is None and event.club_id:
+        club_result = await db.execute(select(Club).where(Club.id == event.club_id))
+        club = club_result.scalar_one_or_none()
+
+    resp = EventResponse.model_validate(event).model_dump()
+    resp["club"] = {"id": club.id, "name": club.name} if club else None
+    return resp
 
 
 @router.delete("/{event_id}")

@@ -8,7 +8,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from core.config import settings
 from core.limiter import limiter
-from routers import auth, events, registrations, admin
+from routers import auth, clubs, events, registrations, admin
 
 app = FastAPI(
     title="EventHub API",
@@ -28,10 +28,11 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
-app.include_router(auth.router, prefix="/auth", tags=["Auth"])
-app.include_router(events.router, prefix="/events", tags=["Events"])
+app.include_router(auth.router,          prefix="/auth",          tags=["Auth"])
+app.include_router(clubs.router,         prefix="/clubs",         tags=["Clubs"])
+app.include_router(events.router,        prefix="/events",        tags=["Events"])
 app.include_router(registrations.router, prefix="/registrations", tags=["Registrations"])
-app.include_router(admin.router, prefix="/admin", tags=["Admin"])
+app.include_router(admin.router,         prefix="/admin",         tags=["Admin"])
 
 
 @app.get("/health")
