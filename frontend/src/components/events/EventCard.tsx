@@ -10,6 +10,33 @@ import {
 } from '@/lib/events'
 import styles from './EventCard.module.css'
 
+/* Magazine-style dek: snip the first ~95 chars at a word boundary, append ellipsis. */
+function buildDek(text: string, maxLen = 95): string {
+  const t = text.trim().replace(/\s+/g, ' ')
+  if (t.length <= maxLen) return t
+  const cut = t.slice(0, maxLen)
+  const lastSpace = cut.lastIndexOf(' ')
+  const sliced = lastSpace > maxLen * 0.6 ? cut.slice(0, lastSpace) : cut
+  return sliced.replace(/[,.;:!\-—]+$/, '') + '…'
+}
+
+/* Editorial sign-off countdown — used as a fallback when there's no dek source. */
+function relativeUntil(iso: string): string {
+  const diffMs = new Date(iso).getTime() - Date.now()
+  if (diffMs < 0) return 'already happened'
+  const min = Math.round(diffMs / 60000)
+  if (min < 60)  return min <= 1 ? 'starting now' : `in ${min} minutes`
+  const hr = Math.round(min / 60)
+  if (hr < 24)   return hr === 1 ? 'in an hour' : `in ${hr} hours`
+  const day = Math.round(hr / 24)
+  if (day === 1) return 'tomorrow'
+  if (day < 7)   return `in ${day} days`
+  const wk = Math.round(day / 7)
+  if (wk === 1)  return 'next week'
+  if (wk < 5)    return `in ${wk} weeks`
+  return 'next month'
+}
+
 /* Per-type accent — HSL triplets so we can drive the card via a single CSS var. */
 const ACCENT_BY_TYPE: Record<EventType, string> = {
   lecture: '217 91% 50%',
@@ -112,6 +139,25 @@ export default function EventCard({ event, index = 0 }: EventCardProps) {
             {event.speaker_name}
           </p>
         )}
+
+        {(() => {
+          const isSparse = !event.club && !event.speaker_name
+          const hasDescription = event.description && event.description.trim().length >= 10
+
+          if (hasDescription) {
+            /* Sparse middle → render the dek as the lede (bigger, roman, accent rule).
+               Rich middle → keep it compact as a secondary italic tease. */
+            return (
+              <p className={isSparse ? styles.dekLede : styles.dek}>
+                {buildDek(event.description, isSparse ? 220 : 95)}
+              </p>
+            )
+          }
+          if (isSparse) {
+            return <p className={styles.countdown}>{relativeUntil(event.starts_at)}</p>
+          }
+          return null
+        })()}
 
         <div className={styles.metaRow}>
           <span className={styles.metaItem}>
