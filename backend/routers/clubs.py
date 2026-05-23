@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
 from core.security import get_current_user, require_role
+from core.audit import write_audit_log
 from models.club import Club
 from models.event import Event
 from models.user import User
@@ -134,6 +135,20 @@ async def create_club(
     db.add(club)
     await db.commit()
     await db.refresh(club)
+
+    await write_audit_log(
+        db=db,
+        actor_id=user["user_id"],
+        action="club_founded",
+        target_type="club",
+        target_id=str(club.id),
+        meta={
+            "name": club.name,
+            "owner_id": str(club.owner_id),
+            "description": club.description,
+        },
+    )
+
     enriched = await enrich_clubs([club], db)
     return enriched[0]
 
@@ -164,11 +179,30 @@ async def update_club(
         if dupe.scalar_one_or_none():
             raise HTTPException(status_code=409, detail="A club with this name already exists")
 
+    # Capture old values BEFORE mutation so we can record the diff
+    old_values = {field: getattr(club, field) for field in updates.keys()}
+
     for field, value in updates.items():
         setattr(club, field, value)
 
     await db.commit()
     await db.refresh(club)
+
+    changes = {
+        field: {"old": old_values[field], "new": updates[field]}
+        for field in updates.keys()
+        if old_values[field] != updates[field]
+    }
+    if changes:
+        await write_audit_log(
+            db=db,
+            actor_id=user["user_id"],
+            action="club_amended",
+            target_type="club",
+            target_id=str(club.id),
+            meta={"name": club.name, "changes": changes},
+        )
+
     enriched = await enrich_clubs([club], db)
     return enriched[0]
 
@@ -208,4 +242,14 @@ async def delete_club(
 
     club.is_active = False
     await db.commit()
+
+    await write_audit_log(
+        db=db,
+        actor_id=user["user_id"],
+        action="club_disbanded",
+        target_type="club",
+        target_id=str(club.id),
+        meta={"name": club.name},
+    )
+
     return {"message": "Club deactivated"}

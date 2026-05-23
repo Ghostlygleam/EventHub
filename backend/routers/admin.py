@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
 from core.security import require_role
+from core.audit import write_audit_log
 from models.audit_log import AuditLog
 from models.user import User, UserRole
 from schemas.admin import RoleChangeRequest
@@ -19,26 +20,6 @@ from schemas.admin import RoleChangeRequest
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-async def write_audit_log(
-    db: AsyncSession,
-    actor_id: str,
-    action: str,
-    target_type: str,
-    target_id: str,
-    meta: dict = None,
-):
-    """Write an entry to audit_logs. Called after every admin action."""
-    log = AuditLog(
-        actor_id=actor_id,
-        action=action,
-        target_type=target_type,
-        target_id=target_id,
-        meta=meta or {},
-    )
-    db.add(log)
-    await db.commit()
 
 
 # ── GET /admin/users ─────────────────────────────────────────
