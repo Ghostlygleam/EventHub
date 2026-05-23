@@ -20,6 +20,9 @@ export type AuditAction =
   | 'role_changed'
   | 'user_deactivated'
   | 'user_reactivated'
+  | 'club_founded'
+  | 'club_amended'
+  | 'club_disbanded'
   | string
 
 export interface AuditLogEntry {
@@ -59,12 +62,18 @@ export const ACTION_LABEL: Record<string, string> = {
   role_changed: 'ROLE_CHANGED',
   user_deactivated: 'USER_DEACTIVATED',
   user_reactivated: 'USER_REACTIVATED',
+  club_founded: 'CLUB_FOUNDED',
+  club_amended: 'CLUB_AMENDED',
+  club_disbanded: 'CLUB_DISBANDED',
 }
 
 export const ACTION_ACCENT: Record<string, string> = {
   role_changed: '217 91% 50%',
   user_deactivated: '0 70% 50%',
   user_reactivated: '142 71% 45%',
+  club_founded: '158 64% 40%',   /* emerald */
+  club_amended: '38 92% 50%',    /* amber */
+  club_disbanded: '0 100% 30%',  /* DMU crimson */
 }
 
 export function isUserRole(value: unknown): value is UserRole {
@@ -76,6 +85,10 @@ export function deriveTargetLabel(
   entry: AuditLogEntry,
   usersById: Map<string, AdminUser>
 ): string {
+  /* Club mutations carry the society name in metadata. */
+  if (entry.target_type === 'club' && entry.metadata && typeof entry.metadata.name === 'string') {
+    return entry.metadata.name
+  }
   /* Deactivate / reactivate metadata carries the email directly. */
   if (entry.metadata && typeof entry.metadata.email === 'string') {
     return entry.metadata.email

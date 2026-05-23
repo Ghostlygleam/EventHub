@@ -12,10 +12,11 @@ import { cn } from '@/lib/utils'
 import styles from './AdminLogsPage.module.css'
 
 const ACTION_FILTERS: { value: '' | AuditAction; label: string }[] = [
-  { value: '',                   label: 'all actions' },
-  { value: 'role_changed',       label: ACTION_LABEL.role_changed.toLowerCase() },
-  { value: 'user_deactivated',   label: ACTION_LABEL.user_deactivated.toLowerCase() },
-  { value: 'user_reactivated',   label: ACTION_LABEL.user_reactivated.toLowerCase() },
+  { value: '', label: 'all actions' },
+  ...Object.keys(ACTION_LABEL).map((key) => ({
+    value: key as AuditAction,
+    label: ACTION_LABEL[key].toLowerCase(),
+  })),
 ]
 
 export default function AdminLogsPage() {
