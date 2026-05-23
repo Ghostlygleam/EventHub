@@ -13,6 +13,7 @@ import {
   SelectField,
   ToggleField,
 } from './FormField'
+import { useMyClubs } from '@/hooks/useMyClubs'
 import styles from './EventForm.module.css'
 
 type FormErrors = Partial<Record<keyof EventFormValues, string>>
@@ -60,12 +61,8 @@ export function validateForm(values: EventFormValues): FormErrors {
     errors.cover_image_url = 'Use a full URL starting with http(s)://'
   }
 
-  if (values.club_id && values.club_id.trim()) {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-    if (!uuidRegex.test(values.club_id.trim())) {
-      errors.club_id = 'Should be a UUID'
-    }
-  }
+  /* club_id always comes from the ClubSelectField dropdown now — no manual UUID entry,
+     so no format validation needed. Empty string means "no society attached". */
 
   return errors
 }
@@ -88,7 +85,7 @@ export default function EventForm({
 }: EventFormProps) {
   const [submitted, setSubmitted] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(
-    !!(initialValues?.club_id || initialValues?.cover_image_url)
+    !!initialValues?.cover_image_url
   )
 
   useEffect(() => {
@@ -270,6 +267,11 @@ export default function EventForm({
         </header>
 
         <div className={styles.fields}>
+          <ClubSelectField
+            value={values.club_id}
+            onChange={(v) => update('club_id', v)}
+          />
+
           <button
             type="button"
             className={cn(styles.advancedToggle, advancedOpen && styles.advancedOpen)}
@@ -279,7 +281,7 @@ export default function EventForm({
             <ChevronDown size={14} strokeWidth={2.4} />
             <span>Advanced fields</span>
             <span className={styles.advancedHint}>
-              cover image · club id
+              cover image
             </span>
           </button>
 
@@ -292,16 +294,6 @@ export default function EventForm({
                 value={values.cover_image_url}
                 onChange={(e) => update('cover_image_url', e.target.value)}
                 error={showErrors ? errors.cover_image_url : undefined}
-              />
-
-              <TextField
-                label="Club ID"
-                hint="UUID — not wired to a clubs index yet"
-                placeholder="00000000-0000-…"
-                value={values.club_id}
-                onChange={(e) => update('club_id', e.target.value)}
-                error={showErrors ? errors.club_id : undefined}
-                className={styles.monoCompactInput}
               />
             </div>
           )}
@@ -398,3 +390,60 @@ export default function EventForm({
 }
 
 export { EMPTY_FORM_VALUES }
+
+/* ═══════════ ClubSelectField ═══════════════════════════════════════════ */
+
+/**
+ * Dropdown of societies the current user can attach this event to.
+ * - organiser sees only their own clubs
+ * - admin sees every active club
+ * - if the user owns zero clubs, we render a muted "no societies yet" line
+ */
+function ClubSelectField({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (next: string) => void
+}) {
+  const { data: clubs, isLoading } = useMyClubs()
+
+  if (isLoading) {
+    return (
+      <SelectField
+        label="Society"
+        hint="optional · loading…"
+        value=""
+        disabled
+        onChange={() => {}}
+        options={[{ value: '', label: 'Loading…' }]}
+      />
+    )
+  }
+
+  if (!clubs || clubs.length === 0) {
+    return (
+      <div className={styles.clubEmpty}>
+        <span className={styles.clubEmptyLabel}>Society</span>
+        <span className={styles.clubEmptyHint}>
+          You don't own any societies yet. Ask an admin to create one in the Console.
+        </span>
+      </div>
+    )
+  }
+
+  const options = [
+    { value: '', label: '— No society —' },
+    ...clubs.map((c) => ({ value: c.id, label: c.name })),
+  ]
+
+  return (
+    <SelectField
+      label="Society"
+      hint="optional · attach this event to one of your societies"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      options={options}
+    />
+  )
+}

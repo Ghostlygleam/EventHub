@@ -139,6 +139,33 @@
   max-width: 340px;
 }
 
+/* ─── Society select empty state (no clubs owned) ─── */
+.clubEmpty {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.025);
+  border: 1px dashed rgba(0, 0, 0, 0.14);
+  border-radius: 10px;
+}
+
+.clubEmptyLabel {
+  font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.clubEmptyHint {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 @keyframes advancedReveal {
   from {
     opacity: 0;

@@ -47,22 +47,53 @@ function formatAbsoluteTime(iso: string | null): string {
   })
 }
 
+function formatDeltaValue(v: unknown): string {
+  if (v === null || v === undefined || v === '') return '∅'
+  if (typeof v === 'boolean') return v ? 'true' : 'false'
+  if (typeof v === 'string') return v.length > 40 ? v.slice(0, 40) + '…' : v
+  return String(v)
+}
+
 function renderDelta(entry: AuditLogEntry): React.ReactNode {
-  if (entry.action !== 'role_changed' || !entry.metadata) return null
-  const oldRole = entry.metadata.old_role
-  const newRole = entry.metadata.new_role
-  if (typeof oldRole !== 'string' || typeof newRole !== 'string') return null
+  if (!entry.metadata) return null
 
-  const oldLabel = isUserRole(oldRole) ? ROLE_LABEL[oldRole] : oldRole
-  const newLabel = isUserRole(newRole) ? ROLE_LABEL[newRole] : newRole
+  if (entry.action === 'role_changed') {
+    const oldRole = entry.metadata.old_role
+    const newRole = entry.metadata.new_role
+    if (typeof oldRole !== 'string' || typeof newRole !== 'string') return null
+    const oldLabel = isUserRole(oldRole) ? ROLE_LABEL[oldRole] : oldRole
+    const newLabel = isUserRole(newRole) ? ROLE_LABEL[newRole] : newRole
+    return (
+      <span className={styles.delta}>
+        <span className={styles.deltaOld}>{oldLabel}</span>
+        <span className={styles.deltaArrow}>→</span>
+        <span className={styles.deltaNew}>{newLabel}</span>
+      </span>
+    )
+  }
 
-  return (
-    <span className={styles.delta}>
-      <span className={styles.deltaOld}>{oldLabel}</span>
-      <span className={styles.deltaArrow}>→</span>
-      <span className={styles.deltaNew}>{newLabel}</span>
-    </span>
-  )
+  /* Clubs amend → per-field diff stored as { changes: { field: { old, new } } } */
+  if (entry.action === 'club_amended') {
+    const changes = entry.metadata.changes as Record<string, { old: unknown; new: unknown }> | undefined
+    if (!changes || typeof changes !== 'object') return null
+    const fields = Object.keys(changes)
+    if (!fields.length) return null
+    return (
+      <span className={styles.delta}>
+        {fields.map((f, i) => (
+          <span key={f} className={styles.deltaField}>
+            {i > 0 && <span className={styles.deltaSep}>·</span>}
+            <span className={styles.deltaFieldName}>{f}</span>
+            <span className={styles.deltaOld}>{formatDeltaValue(changes[f].old)}</span>
+            <span className={styles.deltaArrow}>→</span>
+            <span className={styles.deltaNew}>{formatDeltaValue(changes[f].new)}</span>
+          </span>
+        ))}
+      </span>
+    )
+  }
+
+  return null
 }
 
 export default function LogsTable({ entries, usersById }: LogsTableProps) {

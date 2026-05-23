@@ -1,12 +1,12 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Users, Activity } from 'lucide-react'
+import { Users, Activity, Library } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import StatusDot from './StatusDot'
 import styles from './OpsHeader.module.css'
 
 interface OpsHeaderProps {
   /** Current section — drives the active state of the segmented nav. */
-  active: 'users' | 'logs'
+  active: 'users' | 'clubs' | 'logs'
   /** Page title in serif (e.g. "Population.", "The wire."). */
   title: React.ReactNode
   /** Subtitle / supporting line. */
@@ -20,6 +20,7 @@ interface OpsHeaderProps {
 
 const NAV_ITEMS = [
   { id: 'users', label: 'Users',     path: '/admin/users', icon: Users },
+  { id: 'clubs', label: 'Societies', path: '/admin/clubs', icon: Library },
   { id: 'logs',  label: 'Audit log', path: '/admin/logs',  icon: Activity },
 ] as const
 
@@ -40,7 +41,9 @@ export default function OpsHeader({
         <span className={styles.brandSep}>·</span>
         <span className={styles.brandSection}>OPS</span>
         <span className={styles.brandSep}>·</span>
-        <span className={styles.brandSection}>{active === 'users' ? 'USERS' : 'WIRE'}</span>
+        <span className={styles.brandSection}>
+          {active === 'users' ? 'USERS' : active === 'clubs' ? 'CLUBS' : 'WIRE'}
+        </span>
 
         <span className={styles.brandSpacer} />
 

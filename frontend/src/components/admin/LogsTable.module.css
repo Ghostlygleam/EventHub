@@ -112,10 +112,11 @@
   word-break: break-all;
 }
 
-/* ─── Delta (role change visualization) ─── */
+/* ─── Delta (role change + club amend visualization) ─── */
 .delta {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   font-family: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 11px;
@@ -137,6 +138,28 @@
 .deltaNew {
   color: hsl(var(--entry-accent));
   text-transform: uppercase;
+}
+
+/* Per-field grouping for multi-field amend diffs */
+.deltaField {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.deltaFieldName {
+  color: var(--text-muted);
+  text-transform: lowercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-right: 2px;
+  opacity: 0.85;
+}
+
+.deltaSep {
+  color: var(--text-muted);
+  opacity: 0.4;
+  margin-right: 2px;
 }
 
 /* ─── Responsive ─── */
