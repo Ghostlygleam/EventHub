@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
-  Bell,
   LogOut,
   Menu,
   X,
@@ -119,10 +118,6 @@ export default function Navbar() {
           </nav>
 
           <div className={styles.actions}>
-            <button className={styles.iconBtn} aria-label="Notifications">
-              <Bell size={18} />
-            </button>
-
             <div className={styles.userMenu} ref={menuRef}>
               <button
                 type="button"
