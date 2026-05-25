@@ -29,3 +29,6 @@ Thumbs.db
 docker-compose.override.yml
 .claude/settings.json
 .vite/
+
+# Database dumps (local safety net only — never commit)
+*.sql

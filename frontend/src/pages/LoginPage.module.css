@@ -92,29 +92,19 @@
   margin-bottom: 30px;
 }
 
-.logoWrap {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 18px;
-  animation: fadeUp 0.4s ease 0.12s both;
+/* ─── Standalone heraldic crest — academic letterhead treatment ───── */
+.crest {
+  display: block;
+  width: auto;
+  height: 110px;
+  object-fit: contain;
+  margin: 0 auto 22px;
+  animation: fadeUp 0.5s ease 0.08s both;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.logo {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(145deg, #9a0010, #8b0000);
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  box-shadow:
-    0 10px 36px rgba(139, 0, 0, 0.32),
-    0 3px 10px rgba(139, 0, 0, 0.18),
-    0 1px 0 rgba(255, 255, 255, 0.18) inset;
+.header:hover .crest {
+  transform: scale(1.04);
 }
 
 .title {
@@ -180,10 +170,8 @@
     font-size: 28px;
   }
 
-  .logo {
-    width: 56px;
-    height: 56px;
-    font-size: 24px;
-    border-radius: 16px;
+  .crest {
+    height: 92px;
+    margin-bottom: 18px;
   }
 }

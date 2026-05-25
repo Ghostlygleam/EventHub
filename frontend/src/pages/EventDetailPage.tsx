@@ -240,14 +240,13 @@ function EventDetailView({ event, onRegister, onCancel, isRegistering, isCancell
           )}
 
           <section className={cn(styles.section, styles.sectionBlock)}>
-            {/* TODO: hydrate organiser name when /users/{id} endpoint lands */}
             <div className={styles.blockHead}>
               <Building2 size={16} strokeWidth={2.2} />
               <h2 className={styles.blockTitle}>Organiser</h2>
             </div>
             <p className={styles.blockBody}>
-              TBA
-              <span className={styles.organiserId}>ID: {event.organiser_id.slice(0, 8)}…</span>
+              {event.club ? `${event.club.name} society` : 'EventHub staff'}
+              <span className={styles.organiserId}>questions? message the desk</span>
             </p>
           </section>
         </main>

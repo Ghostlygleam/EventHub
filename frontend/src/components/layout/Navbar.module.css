@@ -86,25 +86,6 @@
   margin-left: auto;
 }
 
-.iconBtn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-}
-
-.iconBtn:hover {
-  background: var(--surface-2);
-  color: var(--text-primary);
-}
-
 .avatar {
   width: 34px;
   height: 34px;
@@ -468,9 +449,4 @@
     font-size: 14px;
   }
 
-  /* Hide the bell on mobile — it's a placeholder, no real notifications yet,
-     and the hamburger steals the visual focus. */
-  .iconBtn {
-    display: none;
-  }
 }
