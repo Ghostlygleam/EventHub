@@ -61,6 +61,20 @@ async def send_registration_confirmation(to_email: str, event_title: str, event_
     )
 
 
+async def send_otp_code(to_email: str, code: str):
+    """Send a one-time sign-in code to the user."""
+    await _send(
+        to_email=to_email,
+        subject=f"Your EventHub sign-in code: {code}",
+        html_body=f"""
+            <h2>Your EventHub sign-in code</h2>
+            <p>Use this code to finish signing in. It expires in 10 minutes.</p>
+            <p style="font-size: 28px; letter-spacing: 0.4em; font-family: 'DM Mono', ui-monospace, Menlo, monospace; font-weight: 700; color: #8b0000; padding: 16px 24px; background: #f5f5f5; border-radius: 8px; display: inline-block;">{html.escape(code)}</p>
+            <p style="color: #666; font-size: 12px;">If you didn&apos;t request this, you can safely ignore this email.</p>
+        """,
+    )
+
+
 async def send_cancellation_notice(to_email: str, event_title: str):
     """Notify a student that an event they registered for was cancelled."""
     safe_title = html.escape(event_title)
