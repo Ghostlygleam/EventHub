@@ -29,6 +29,6 @@ WORKDIR /app
 RUN npm install -g serve
 COPY --from=builder /app/dist ./dist
 EXPOSE 3000
-# Railway injects $PORT; fall back to 3000 for local prod testing.
 # -s flag = SPA mode (all routes fall through to index.html).
-CMD ["sh", "-c", "serve -s dist -l ${PORT:-3000}"]
+# Hardcoded to 3000 so Railway's domain port mapping (also 3000) lines up.
+CMD ["serve", "-s", "dist", "-l", "3000"]
