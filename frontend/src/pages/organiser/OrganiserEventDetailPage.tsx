@@ -24,6 +24,7 @@ import {
   type EventType,
 } from '@/lib/events'
 import { cn } from '@/lib/utils'
+import { BASE_URL } from '@/lib/api'
 import StatusBadge from '@/components/organiser/StatusBadge'
 import RegistrationsTable from '@/components/organiser/RegistrationsTable'
 import SpikeDialog from '@/components/organiser/SpikeDialog'
@@ -74,8 +75,7 @@ export default function OrganiserEventDetailPage() {
   const handleExport = () => {
     if (!id) return
     const token = localStorage.getItem('token')
-    const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
-    fetch(`${baseUrl}/events/${id}/registrations/export`, {
+    fetch(`${BASE_URL}/events/${id}/registrations/export`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((res) => {

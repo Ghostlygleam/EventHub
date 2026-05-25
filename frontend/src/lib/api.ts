@@ -1,4 +1,11 @@
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+/* Exported so other modules (e.g. direct fetch for CSV download) don't hardcode the URL. */
+export const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+
+/* Loud failure for prod builds shipped without an API URL — better than silently
+   pointing the deployed frontend at the user's localhost. */
+if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {
+  throw new Error('VITE_API_URL must be set when building for production')
+}
 
 function getToken(): string | null {
   return localStorage.getItem('token')
