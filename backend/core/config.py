@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     supabase_url: str
     supabase_key: str
     jwt_secret: str
-    resend_api_key: str
+    brevo_api_key: str
     database_url: str
     allowed_email_domains: str = "ac.uk,edu"
     dev_auth_bypass: bool = False  # set to true in .env for local dev only, never in prod
