@@ -91,26 +91,30 @@ async def send_otp(request: Request, body: SendOTPRequest):
     if not is_valid_domain(body.email):
         raise HTTPException(status_code=400, detail="Only university emails are allowed")
 
-    # Dev shortcut — skip rate limiting + email send entirely
-    if settings.dev_auth_bypass:
-        return {"message": "OTP sent (dev bypass — use code 000000)"}
-
-    # Per-email cap: 1/min, 5/hour (defined in core/otp_limiter.py)
-    allowed, retry_after = otp_limiter.check(body.email)
-    if not allowed:
-        raise HTTPException(
-            status_code=429,
-            detail=f"Too many requests. Try again in {retry_after} seconds.",
-            headers={"Retry-After": str(retry_after)},
-        )
+    # Per-email cap: 1/min, 5/hour (defined in core/otp_limiter.py).
+    # Skipped in dev so re-issuing codes during testing isn't blocked.
+    if not settings.dev_auth_bypass:
+        allowed, retry_after = otp_limiter.check(body.email)
+        if not allowed:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Too many requests. Try again in {retry_after} seconds.",
+                headers={"Retry-After": str(retry_after)},
+            )
 
     code = issue_otp(body.email)
     try:
         await send_otp_code(body.email, code)
     except Exception as exc:
         logger.warning("OTP email send failed for %s: %s", body.email, exc)
+        # In dev mode the 000000 shortcut still lets the user in even if
+        # the real email failed — don't surface a 502 that would hide that.
+        if settings.dev_auth_bypass:
+            return {"message": "OTP send failed; dev bypass code 000000 still works"}
         raise HTTPException(status_code=502, detail="Failed to send OTP, please try again")
 
+    if settings.dev_auth_bypass:
+        return {"message": "OTP sent to your email (dev bypass: code 000000 also works)"}
     return {"message": "OTP sent to your email"}
 
 
