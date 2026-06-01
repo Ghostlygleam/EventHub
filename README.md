@@ -174,6 +174,6 @@ EventHub/
 
 ## Team
 
-- **Frontend:** Vladislav Komarov (sole developer)
-- **Backend:** Viktoriya Turaeva, Mikhail Komarov
+- **Frontend:** Vladislav Karelin (sole developer)
+- **Backend:** Viktoriya Turaeva, Mikhail Ogai
 - **Module:** IMAT2718K Integrated Project — De Montfort University Kazakhstan, 2025–2026
