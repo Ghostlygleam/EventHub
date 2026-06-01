@@ -32,3 +32,5 @@ docker-compose.override.yml
 
 # Database dumps (local safety net only — never commit)
 *.sql
+# ...but the curated demo seed IS part of the project and should be tracked
+!seed_demo.sql
