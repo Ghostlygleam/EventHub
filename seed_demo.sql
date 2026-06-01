@@ -1,19 +1,24 @@
 -- ─────────────────────────────────────────────────────────────────
--- EventHub demo seed — clean slate for live demo / submission
--- 3 users (admin / organiser / student), 2 societies (Padel + Debate),
--- 21 events spread across ~7 weeks (27 May → 15 Jul 2026).
+-- EventHub demo seed — IDEMPOTENT version.
+--
+-- Safe to run multiple times. Does NOT wipe anything: uses
+-- ON CONFLICT (id) DO NOTHING throughout so existing users, clubs,
+-- events, registrations and audit_logs are preserved.
+--
+-- After a fresh apply you'll have:
+--   3 users    (admin / organiser / student — my365.dmu.ac.uk addresses)
+--   2 clubs    (Padel Society + Debate Society, both owned by organiser)
+--   21 events  (27 May → 15 Jul 2026: lectures, workshops, weekly society sessions)
 -- ─────────────────────────────────────────────────────────────────
 
 BEGIN;
-
--- ─── Wipe everything ─────────────────────────────────────────────
-TRUNCATE audit_logs, registrations, events, clubs, users RESTART IDENTITY CASCADE;
 
 -- ─── Three demo accounts ─────────────────────────────────────────
 INSERT INTO users (id, email, full_name, role, is_active, created_at) VALUES
   ('aaaa1111-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'P2834837@my365.dmu.ac.uk', 'Vladislav Komarov', 'admin',     true, NOW() - INTERVAL '30 days'),
   ('bbbb2222-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'P2893284@my365.dmu.ac.uk', 'Maria Tsoy',        'organiser', true, NOW() - INTERVAL '25 days'),
-  ('cccc3333-cccc-cccc-cccc-cccccccccccc', 'P2897992@my365.dmu.ac.uk', 'Aizhan Bekova',     'student',   true, NOW() - INTERVAL '20 days');
+  ('cccc3333-cccc-cccc-cccc-cccccccccccc', 'P2897992@my365.dmu.ac.uk', 'Aizhan Bekova',     'student',   true, NOW() - INTERVAL '20 days')
+ON CONFLICT (id) DO NOTHING;
 
 -- ─── Two societies, both owned by the organiser ──────────────────
 INSERT INTO clubs (id, name, description, owner_id, is_active, created_at) VALUES
@@ -29,7 +34,8 @@ INSERT INTO clubs (id, name, description, owner_id, is_active, created_at) VALUE
    'Tuesday-evening discussions for students who like to argue with their thinking before their voice. British Parliamentary format, mixed-skill rounds, and inter-faculty showdowns. Newcomers get a starter pack and a buddy round; no debating experience required.',
    'bbbb2222-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
    true,
-   NOW() - INTERVAL '12 days');
+   NOW() - INTERVAL '12 days')
+ON CONFLICT (id) DO NOTHING;
 
 -- ─── Standalone organiser events (lectures + workshops) ──────────
 INSERT INTO events
@@ -37,7 +43,6 @@ INSERT INTO events
    capacity, speaker_name, club_id, organiser_id, cover_image_url,
    is_published, is_cancelled, created_at)
 VALUES
-  -- May 28 — original
   ('e1111111-1111-1111-1111-111111111111',
    'Intro to Machine Learning',
    'Foundational lecture covering supervised vs unsupervised learning, the role of training data, and the practical pipeline from raw input to a deployed model. No prior maths required — examples will use Python and scikit-learn.',
@@ -74,7 +79,6 @@ VALUES
    NULL, 'bbbb2222-bbbb-bbbb-bbbb-bbbbbbbbbbbb', NULL,
    true, false, NOW() - INTERVAL '4 days'),
 
-  -- June 22 → July 15: extended catalogue
   ('e5555555-5555-5555-5555-555555555555',
    'Git for Teams: Beyond Pull and Push',
    'Workshop on the parts of Git that everyone uses badly: rebase vs merge, interactive history rewriting, recovering lost commits with reflog, and a clean PR workflow for a small team. Bring a laptop with Git installed.',
@@ -127,7 +131,8 @@ VALUES
    '2026-07-15 14:00+05', '2026-07-15 16:00+05',
    100, 'Dr. Yerlan Karimov',
    NULL, 'bbbb2222-bbbb-bbbb-bbbb-bbbbbbbbbbbb', NULL,
-   true, false, NOW() - INTERVAL '1 day');
+   true, false, NOW() - INTERVAL '1 day')
+ON CONFLICT (id) DO NOTHING;
 
 -- ─── Padel Society — Wednesday evenings ──────────────────────────
 INSERT INTO events
@@ -203,7 +208,8 @@ VALUES
    40, 'Vladislav Komarov',
    'dddd4444-dddd-dddd-dddd-dddddddddddd',
    'bbbb2222-bbbb-bbbb-bbbb-bbbbbbbbbbbb', NULL,
-   true, false, NOW() - INTERVAL '5 days');
+   true, false, NOW() - INTERVAL '5 days')
+ON CONFLICT (id) DO NOTHING;
 
 -- ─── Debate Society — Tuesday evenings ───────────────────────────
 INSERT INTO events
@@ -259,7 +265,8 @@ VALUES
    40, 'Maria Tsoy',
    'eeee5555-eeee-eeee-eeee-eeeeeeeeeeee',
    'bbbb2222-bbbb-bbbb-bbbb-bbbbbbbbbbbb', NULL,
-   true, false, NOW() - INTERVAL '3 days');
+   true, false, NOW() - INTERVAL '3 days')
+ON CONFLICT (id) DO NOTHING;
 
 COMMIT;
 
